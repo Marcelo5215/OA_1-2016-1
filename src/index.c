@@ -22,7 +22,6 @@ indexI* criaIndice(char* nomeArq){
 	FILE* fp;
 	fp = fopen(nomeArq, "r+");
 
-
 	char stringAUX[64];      //servira apenas para ler as linhas do arquivo
 	char chave[31];          //servira para adotarmos a chave primaria de cada registro
 	long int byte_offset = 0;
@@ -114,6 +113,66 @@ void ordenaIndice(indexI* ind, int esquerda, int direita){
 	if(i < direita){
 		ordenaIndice(ind, i, direita);
 	}
+} 
+
+char* getRegistro(FILE* fp, long int byte_offset){
+	static char saida[64];
+	fseek(fp, byte_offset, SEEK_SET);
+	fscanf(fp,"%[^\n]s", saida);
+
+	return saida;
+}
+
+// cria um arquivo com as duas listas intercaladas
+void intercalaListas(char* lista1, char* lista2){
+	//arquivos a serem manipulados
+	FILE *fp1, *fp2, *saida;
+	fp1 = fopen(lista1, "r");
+	fp2 = fopen(lista2, "r");
+	saida = fopen("lista12.txt", "w");
+	//indices das listas
+	indexI* CP1 = criaIndice(lista1);
+	indexI* CP2 = criaIndice(lista2);
+
+	//ordena os indices
+	ordenaIndice(CP1, primeiroElementoIndice(CP1), ultimoElementoIndice(CP1));
+	ordenaIndice(CP2, primeiroElementoIndice(CP2), ultimoElementoIndice(CP2));
+
+	//a partir dos indices une as listas
+	int i = 0 , j = 0;
+	while(strcmp(CP1[i].key, FIM_IND) != 0 && strcmp(CP2[j].key, FIM_IND) != 0){
+		if(strcmp(CP1[i].key, CP2[j].key) < 0){
+			fprintf(saida, "%s\n", getRegistro(fp1, CP1[i].byte_offset));
+			i++;
+		}
+		else if(strcmp(CP2[j].key, CP1[i].key) < 0){
+			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			j++;
+		}
+		else{
+			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			i++; j++;
+		}
+	}
+	// se algum dos dois não  chegou ao fim...
+	if(strcmp(CP1[i].key, FIM_IND) == 0){
+		while(strcmp(CP2[j].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			j++;
+		}
+	} 
+	else if(strcmp(CP2[j].key, FIM_IND) == 0){
+		while(strcmp(CP1[i].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistro(fp1, CP1[i].byte_offset));
+			i++;
+		}
+	}
+
+	fclose(fp1);
+	fclose(fp2);
+	fclose(saida);
+	free(CP1);
+	free(CP2);
 }
 
 #undef FIM_IND

@@ -19,6 +19,8 @@ int main(int agrc, char** argv){
 	imprimeIndice(CP);
 	free(CP);
 
+	intercalaListas((char*)"lista1.txt", (char*)"lista2.txt");
+
 
 	return 0;
 }
