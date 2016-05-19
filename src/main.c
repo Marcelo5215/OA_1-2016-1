@@ -6,7 +6,7 @@
 int main(int agrc, char** argv){
 	indexI* CP = criaIndice((char*)"lista2.txt");
 	imprimeIndice(CP);
-	ordenaIndice(CP, 0, 21);
+	ordenaIndice(CP, primeiroElementoIndice(CP), ultimoElementoIndice(CP));
 	printf("Sorted:\n");
 	imprimeIndice(CP);
 	free(CP);
@@ -14,7 +14,7 @@ int main(int agrc, char** argv){
 	printf("lista 1:\n");
 	CP = criaIndice((char*)"lista1.txt");
 	imprimeIndice(CP);
-	ordenaIndice(CP, 0, 19);
+	ordenaIndice(CP, primeiroElementoIndice(CP), ultimoElementoIndice(CP));
 	printf("Sorted:\n");
 	imprimeIndice(CP);
 	free(CP);

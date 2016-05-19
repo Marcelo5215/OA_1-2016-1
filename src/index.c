@@ -8,6 +8,11 @@ struct index_P{
 	int tamanho;
 };
 
+int primeiroElementoIndice(indexI *ind) { return (ind == NULL) ? -1 : 0; }
+//Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
+//que não está incluido no tamanho
+int ultimoElementoIndice(indexI *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
+
 /* Cria um indice a partir de um arquivo do modo especificado:      *
  * MATRIC       NOME                      OP   CURSO  TURMA         *                    
  * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
@@ -74,7 +79,7 @@ void imprimeIndice(indexI* ind){
 		printf("%s --- %10ld\n", ind[i].key, ind[i].byte_offset);
 		i++;
 	}
-	printf("%s--- %10.ld\n", ind[i].key, ind[i].byte_offset);
+	printf("%s\n", ind[i].key);
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo

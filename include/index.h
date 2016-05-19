@@ -9,9 +9,11 @@
 
 	typedef struct index_P indexI;
 
+	int primeiroElementoIndice(indexI *ind);
+	int ultimoElementoIndice(indexI *ind);
+
 	indexI* criaIndice(char* nomeArq);
 	void ordenaIndice(indexI* ind, int esquerda, int direita);
 	void imprimeIndice(indexI* ind);
-
 
 #endif
