@@ -7,14 +7,15 @@
 	#include <ctype.h>
 	#define TAM_REG 64
 
-	typedef struct index_P indexI;
+	struct tableindex_P;
+	typedef struct tableindex_P tabelaInd_Prim;
 
-	int primeiroElementoIndicePrimario(indexI *ind);
-	int ultimoElementoIndicePrimario(indexI *ind);
+	int primeiroElementoIndicePrimario(tabelaInd_Prim *ind);
+	int ultimoElementoIndicePrimario(tabelaInd_Prim *ind);
 
-	indexI* criaIndicePrimario(char* nomeArq);
-	void ordenaIndicePrimario(indexI* ind, int esquerda, int direita);
-	void imprimeIndicePrimario(indexI* ind);
+	tabelaInd_Prim* criaIndicePrimario(char* nomeArq);
+	void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita);
+	void imprimeIndicePrimario(tabelaInd_Prim* ind);
 	char* getRegistroPrimario(FILE* fp, long int byte_offset);
 	void intercalaListasPrimario(char* lista1, char* lista2);
 

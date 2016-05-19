@@ -4,7 +4,7 @@
 #include "index.h"
 
 int main(int agrc, char** argv){
-	indexI* CP = criaIndicePrimario((char*)"lista2.txt");
+	tabelaInd_Prim* CP = criaIndicePrimario((char*)"lista2.txt");
 	imprimeIndicePrimario(CP);
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
 	printf("Sorted:\n");

@@ -2,33 +2,45 @@
 
 #define FIM_IND "final"
 
+
 struct index_P{
 	char key[31];
 	long int byte_offset;
-	int tamanho;
 };
 
-int primeiroElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : 0; }
+typedef struct index_P indexI;
+
+struct tableindex_P {
+	indexI *vet_ind;
+	// index_S *vet_ind_sec_asso;
+	int tamanho;
+	int num_ind_sec;
+};
+
+int primeiroElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
 //que não está incluido no tamanho
-int ultimoElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
+int ultimoElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
 
 /* Cria um indice a partir de um arquivo do modo especificado:      *
  * MATRIC       NOME                      OP   CURSO  TURMA         *                    
  * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
  * com uma chave primaria que e a concatenacao dos campos matricula *
  * e nome.                                                          */
-indexI* criaIndicePrimario(char* nomeArq){
+tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
 	FILE* fp;
 	fp = fopen(nomeArq, "r+");
 
 	char stringAUX[64];      //servira apenas para ler as linhas do arquivo
 	char chave[31];          //servira para adotarmos a chave primaria de cada registro
 	long int byte_offset = 0;
-	int tam_indice = 1 , i, j;        //tamanho atual do indice
+	int tam_indice = 1;        //tamanho atual do indice
+	int i, j;
 	
-	indexI* CP = (indexI*)malloc(sizeof(indexI));    //indice de Chaves Primarias
-	CP[0].tamanho = 0;
+	tabelaInd_Prim* CP = (tabelaInd_Prim*) malloc(sizeof(tabelaInd_Prim));    //tabela de indices de Chaves Primarias
+	CP->vet_ind = (indexI *) malloc(sizeof(indexI));
+	CP->tamanho = 0;
+	
 	while(fscanf(fp,"%[^\n]\n", stringAUX) > 0){
 		for (i = 0; i < 31; ++i){
 			chave[i] = ' ';
@@ -50,20 +62,20 @@ indexI* criaIndicePrimario(char* nomeArq){
 		chave[31] ='\0';
 
 		//atribui os valores ao indice
-		CP[tam_indice-1].byte_offset = byte_offset;
-		strcpy(CP[tam_indice-1].key, chave);
-		CP[0].tamanho++;
+		CP->vet_ind[tam_indice-1].byte_offset = byte_offset;
+		strcpy(CP->vet_ind[tam_indice-1].key, chave);
+		CP->tamanho++;
 		tam_indice++; 
 
 		//aloca mais um espaco para o proximo registro no indice 
-		CP = (indexI*)realloc(CP, sizeof(indexI)*tam_indice);
+		CP->vet_ind = (indexI *) realloc(CP->vet_ind, sizeof(indexI) * tam_indice);
 		//calcula o byte_offset do prox
 		byte_offset = byte_offset + TAM_REG;
 
 // 		fgetc(fp);
 	}
 	//um espaco será sempre alocado a mais, agora usaremos ele para indicar o final...
-	strcpy(CP[tam_indice-1].key, FIM_IND);
+	strcpy(CP->vet_ind[tam_indice-1].key, FIM_IND);
 
 	fclose(fp);
 
@@ -71,38 +83,38 @@ indexI* criaIndicePrimario(char* nomeArq){
 }
 
 //imprime o indice
-void imprimeIndicePrimario(indexI* ind){
+void imprimeIndicePrimario(tabelaInd_Prim* ind){
 	int i=0;
 
-	while(strcmp(ind[i].key, FIM_IND) != 0){
-		printf("%s --- %10ld\n", ind[i].key, ind[i].byte_offset);
+	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
+		printf("%s --- %10ld\n", ind->vet_ind[i].key, ind->vet_ind[i].byte_offset);
 		i++;
 	}
-	printf("%s\n", ind[i].key);
+	printf("%s\n", ind->vet_ind[i].key);
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo
-void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
-	if(direita >  ind[0].tamanho){
+void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita){
+	if(direita >  ind->tamanho){
 		printf("Tamanho inadequado.\n");
 		return;
 	}
 	int i = esquerda, j = direita;
 	char pivo[31];
-	strcpy(pivo, ind[esquerda].key);
+	strcpy(pivo, ind->vet_ind[esquerda].key);
 	indexI temp;
 
 	while(j >= i){
-		while(strcmp(ind[i].key, pivo) < 0){
+		while(strcmp(ind->vet_ind[i].key, pivo) < 0){
 			i++;
 		}
-		while(strcmp(ind[j].key, pivo) > 0){
+		while(strcmp(ind->vet_ind[j].key, pivo) > 0){
 			j--;
 		}
 		if(j >= i){
-			temp = ind[i];
-			ind[i] = ind[j];
-			ind[j] = temp;
+			temp = ind->vet_ind[i];
+			ind->vet_ind[i] = ind->vet_ind[j];
+			ind->vet_ind[j] = temp;
 			i++;
 			j--;
 		}
@@ -118,7 +130,7 @@ void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
 char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
-	fscanf(fp,"%[^\n]s", saida);
+	fscanf(fp,"%[^\n]\n", saida);
 
 	return saida;
 }
@@ -131,8 +143,8 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	fp2 = fopen(lista2, "r");
 	saida = fopen("lista12.txt", "w");
 	//indices das listas
-	indexI* CP1 = criaIndicePrimario(lista1);
-	indexI* CP2 = criaIndicePrimario(lista2);
+	tabelaInd_Prim* CP1 = criaIndicePrimario(lista1);
+	tabelaInd_Prim* CP2 = criaIndicePrimario(lista2);
 
 	//ordena os indices
 	ordenaIndicePrimario(CP1, primeiroElementoIndicePrimario(CP1), ultimoElementoIndicePrimario(CP1));
@@ -140,30 +152,30 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 
 	//a partir dos indices une as listas
 	int i = 0 , j = 0;
-	while(strcmp(CP1[i].key, FIM_IND) != 0 && strcmp(CP2[j].key, FIM_IND) != 0){
-		if(strcmp(CP1[i].key, CP2[j].key) < 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
+	while(strcmp(CP1->vet_ind[i].key, FIM_IND) != 0 && strcmp(CP2->vet_ind[j].key, FIM_IND) != 0){
+		if(strcmp(CP1->vet_ind[i].key, CP2->vet_ind[j].key) < 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1->vet_ind[i].byte_offset));
 			i++;
 		}
-		else if(strcmp(CP2[j].key, CP1[i].key) < 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+		else if(strcmp(CP2->vet_ind[j].key, CP1->vet_ind[i].key) < 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			j++;
 		}
 		else{
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			i++; j++;
 		}
 	}
 	// se algum dos dois não  chegou ao fim...
-	if(strcmp(CP1[i].key, FIM_IND) == 0){
-		while(strcmp(CP2[j].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+	if(strcmp(CP1->vet_ind[i].key, FIM_IND) == 0){
+		while(strcmp(CP2->vet_ind[j].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			j++;
 		}
 	} 
-	else if(strcmp(CP2[j].key, FIM_IND) == 0){
-		while(strcmp(CP1[i].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
+	else if(strcmp(CP2->vet_ind[j].key, FIM_IND) == 0){
+		while(strcmp(CP1->vet_ind[i].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1->vet_ind[i].byte_offset));
 			i++;
 		}
 	}
