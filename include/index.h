@@ -15,6 +15,7 @@
 	indexI* criaIndicePrimario(char* nomeArq);
 	void ordenaIndicePrimario(indexI* ind, int esquerda, int direita);
 	void imprimeIndicePrimario(indexI* ind);
+	void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq);
 	void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria);
 	void intercalaListasPrimario(char* lista1, char* lista2);
 

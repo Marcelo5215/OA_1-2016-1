@@ -81,6 +81,17 @@ void imprimeIndicePrimario(indexI* ind){
 	printf("%s\n", ind[i].key);
 }
 
+//cria um arquivo com os indices primarios
+void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq){
+	FILE *fp = fopen(nomeArq, "w");
+
+	for(int i = 0 ; i < ultimoElementoIndicePrimario(ind) ; i++){
+		fprintf(fp, "%s       %10ld\n", ind[i].key, ind[i]. byte_offset);
+	}
+
+	fclose(fp);
+}
+
 //ordena o indice primario com o mecanismmo do quicksort recursivo
 void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
 	if(direita >  ind[0].tamanho){

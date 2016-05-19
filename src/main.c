@@ -9,6 +9,7 @@ int main(int agrc, char** argv){
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
 	printf("Sorted:\n");
 	imprimeIndicePrimario(CP);
+	imprimeIndicePrimarioArq(CP, (char*)"indicelista2.ind");
 	free(CP);
 	
 	printf("lista 1:\n");
@@ -17,6 +18,7 @@ int main(int agrc, char** argv){
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
 	printf("Sorted:\n");
 	imprimeIndicePrimario(CP);
+	imprimeIndicePrimarioArq(CP, (char*)"indicelista1.ind");
 
 	findRegistroPrimario("lista1.txt", CP, "042728DanielAlonsoNegrini      "); //lista errada -> nao existe
 	findRegistroPrimario("lista1.txt", CP, "042865DaniloSilvaMarshall      "); //meio da lista
