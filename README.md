@@ -1,4 +1,11 @@
 # OA_1-2016-1
 
-O programa foi feito utilizando o utilitário make, para compilá-lo vá a pasta src
-e apenas digite make.
+
+Trabalho de Organização de Arquivos
+Marcelo de Araújo Lopes Júnior - 150016794
+Rafael de Lima Chehab - 150045123
+
+Instruções para compilação:
+	$ cd src
+	$ make && make clean
+	$ ./main

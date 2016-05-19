@@ -5,11 +5,12 @@
 	#include <stdlib.h>
 	#include <string.h>
 	#include <ctype.h>
-	#define TAM_REG 64
+	#define TAM_REG 63
 
 	typedef struct index_P indexI;
 
 	indexI* criaIndice(char* nomeArq);
+	void ordenaIndice(indexI* ind, int esquerda, int direita);
 	void imprimeIndice(indexI* ind);
 
 

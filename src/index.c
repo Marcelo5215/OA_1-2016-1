@@ -3,11 +3,12 @@
 struct index_P{
 	char key[31];
 	long int byte_offset;
+	int tamanho;
 };
 
 /* Cria um indice a partir de um arquivo do modo especificado:      *
  * MATRIC       NOME                      OP   CURSO  TURMA         *                    
- * 150016794    MARCELO DE Araujo Lopes   00    EC      A           *
+ * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
  * com uma chave primaria que e a concatenacao dos campos matricula *
  * e nome.                                                          */
 indexI* criaIndice(char* nomeArq){
@@ -21,6 +22,7 @@ indexI* criaIndice(char* nomeArq){
 	int tam_indice = 1 , i, j;        //tamanho atual do indice
 	
 	indexI* CP = (indexI*)malloc(sizeof(indexI));    //indice de Chaves Primarias
+	CP[0].tamanho = 0;
 	while(fscanf(fp,"%[^\n]s", stringAUX) > 0){
 		for (i = 0; i < 31; ++i){
 			chave[i] = ' ';
@@ -44,6 +46,7 @@ indexI* criaIndice(char* nomeArq){
 		//atribui os valores ao indice
 		CP[tam_indice-1].byte_offset = byte_offset;
 		strcpy(CP[tam_indice-1].key, chave);
+		CP[0].tamanho++;
 		tam_indice++; 
 
 		//aloca mais um espaco para o proximo registro no indice 
@@ -70,5 +73,38 @@ void imprimeIndice(indexI* ind){
 		i++;
 	}
 	printf("%s--- %10.ld\n", ind[i].key, ind[i].byte_offset);
+}
 
+//ordena o indice primario com o mecanismmo do quicksort recursivo
+void ordenaIndice(indexI* ind, int esquerda, int direita){
+	if(direita >  ind[0].tamanho){
+		printf("Tamanho inadequado.\n");
+		return;
+	}
+	int i = esquerda, j = direita;
+	char pivo[31];
+	strcpy(pivo, ind[esquerda].key);
+	indexI temp;
+
+	while(j >= i){
+		while(strcmp(ind[i].key, pivo) < 0){
+			i++;
+		}
+		while(strcmp(ind[j].key, pivo) > 0){
+			j--;
+		}
+		if(j >= i){
+			temp = ind[i];
+			ind[i] = ind[j];
+			ind[j] = temp;
+			i++;
+			j--;
+		}
+	};
+	if(j > esquerda){
+		ordenaIndice(ind, esquerda, j);
+	}
+	if(i < direita){
+		ordenaIndice(ind, i, direita);
+	}
 }
