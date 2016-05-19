@@ -1,5 +1,7 @@
 #include "index.h"
 
+#define FIM_IND "final"
+
 struct index_P{
 	char key[31];
 	long int byte_offset;
@@ -23,7 +25,7 @@ indexI* criaIndice(char* nomeArq){
 	
 	indexI* CP = (indexI*)malloc(sizeof(indexI));    //indice de Chaves Primarias
 	CP[0].tamanho = 0;
-	while(fscanf(fp,"%[^\n]s", stringAUX) > 0){
+	while(fscanf(fp,"%[^\n]\n", stringAUX) > 0){
 		for (i = 0; i < 31; ++i){
 			chave[i] = ' ';
 		}
@@ -54,10 +56,10 @@ indexI* criaIndice(char* nomeArq){
 		//calcula o byte_offset do prox
 		byte_offset = byte_offset + TAM_REG;
 
-		fgetc(fp);
+// 		fgetc(fp);
 	}
 	//um espaco será sempre alocado a mais, agora usaremos ele para indicar o final...
-	strcpy(CP[tam_indice-1].key, (char*)"final\0");
+	strcpy(CP[tam_indice-1].key, FIM_IND);
 
 	fclose(fp);
 
@@ -68,8 +70,8 @@ indexI* criaIndice(char* nomeArq){
 void imprimeIndice(indexI* ind){
 	int i=0;
 
-	while(strcmp(ind[i].key, "final") != 0){
-		printf("%s --- %10.ld\n", ind[i].key, ind[i].byte_offset);
+	while(strcmp(ind[i].key, FIM_IND) != 0){
+		printf("%s --- %10ld\n", ind[i].key, ind[i].byte_offset);
 		i++;
 	}
 	printf("%s--- %10.ld\n", ind[i].key, ind[i].byte_offset);
@@ -108,3 +110,5 @@ void ordenaIndice(indexI* ind, int esquerda, int direita){
 		ordenaIndice(ind, i, direita);
 	}
 }
+
+#undef FIM_IND
