@@ -8,17 +8,17 @@ struct index_P{
 	int tamanho;
 };
 
-int primeiroElementoIndice(indexI *ind) { return (ind == NULL) ? -1 : 0; }
+int primeiroElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
 //que não está incluido no tamanho
-int ultimoElementoIndice(indexI *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
+int ultimoElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
 
 /* Cria um indice a partir de um arquivo do modo especificado:      *
  * MATRIC       NOME                      OP   CURSO  TURMA         *                    
  * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
  * com uma chave primaria que e a concatenacao dos campos matricula *
  * e nome.                                                          */
-indexI* criaIndice(char* nomeArq){
+indexI* criaIndicePrimario(char* nomeArq){
 	FILE* fp;
 	fp = fopen(nomeArq, "r+");
 
@@ -71,7 +71,7 @@ indexI* criaIndice(char* nomeArq){
 }
 
 //imprime o indice
-void imprimeIndice(indexI* ind){
+void imprimeIndicePrimario(indexI* ind){
 	int i=0;
 
 	while(strcmp(ind[i].key, FIM_IND) != 0){
@@ -82,7 +82,7 @@ void imprimeIndice(indexI* ind){
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo
-void ordenaIndice(indexI* ind, int esquerda, int direita){
+void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
 	if(direita >  ind[0].tamanho){
 		printf("Tamanho inadequado.\n");
 		return;
@@ -108,14 +108,14 @@ void ordenaIndice(indexI* ind, int esquerda, int direita){
 		}
 	};
 	if(j > esquerda){
-		ordenaIndice(ind, esquerda, j);
+		ordenaIndicePrimario(ind, esquerda, j);
 	}
 	if(i < direita){
-		ordenaIndice(ind, i, direita);
+		ordenaIndicePrimario(ind, i, direita);
 	}
 } 
 
-char* getRegistro(FILE* fp, long int byte_offset){
+char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
 	fscanf(fp,"%[^\n]s", saida);
@@ -124,46 +124,46 @@ char* getRegistro(FILE* fp, long int byte_offset){
 }
 
 // cria um arquivo com as duas listas intercaladas
-void intercalaListas(char* lista1, char* lista2){
+void intercalaListasPrimario(char* lista1, char* lista2){
 	//arquivos a serem manipulados
 	FILE *fp1, *fp2, *saida;
 	fp1 = fopen(lista1, "r");
 	fp2 = fopen(lista2, "r");
 	saida = fopen("lista12.txt", "w");
 	//indices das listas
-	indexI* CP1 = criaIndice(lista1);
-	indexI* CP2 = criaIndice(lista2);
+	indexI* CP1 = criaIndicePrimario(lista1);
+	indexI* CP2 = criaIndicePrimario(lista2);
 
 	//ordena os indices
-	ordenaIndice(CP1, primeiroElementoIndice(CP1), ultimoElementoIndice(CP1));
-	ordenaIndice(CP2, primeiroElementoIndice(CP2), ultimoElementoIndice(CP2));
+	ordenaIndicePrimario(CP1, primeiroElementoIndicePrimario(CP1), ultimoElementoIndicePrimario(CP1));
+	ordenaIndicePrimario(CP2, primeiroElementoIndicePrimario(CP2), ultimoElementoIndicePrimario(CP2));
 
 	//a partir dos indices une as listas
 	int i = 0 , j = 0;
 	while(strcmp(CP1[i].key, FIM_IND) != 0 && strcmp(CP2[j].key, FIM_IND) != 0){
 		if(strcmp(CP1[i].key, CP2[j].key) < 0){
-			fprintf(saida, "%s\n", getRegistro(fp1, CP1[i].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
 			i++;
 		}
 		else if(strcmp(CP2[j].key, CP1[i].key) < 0){
-			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
 			j++;
 		}
 		else{
-			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
 			i++; j++;
 		}
 	}
 	// se algum dos dois não  chegou ao fim...
 	if(strcmp(CP1[i].key, FIM_IND) == 0){
 		while(strcmp(CP2[j].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistro(fp2, CP2[j].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
 			j++;
 		}
 	} 
 	else if(strcmp(CP2[j].key, FIM_IND) == 0){
 		while(strcmp(CP1[i].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistro(fp1, CP1[i].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
 			i++;
 		}
 	}

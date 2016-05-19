@@ -4,22 +4,22 @@
 #include "index.h"
 
 int main(int agrc, char** argv){
-	indexI* CP = criaIndice((char*)"lista2.txt");
-	imprimeIndice(CP);
-	ordenaIndice(CP, primeiroElementoIndice(CP), ultimoElementoIndice(CP));
+	indexI* CP = criaIndicePrimario((char*)"lista2.txt");
+	imprimeIndicePrimario(CP);
+	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
 	printf("Sorted:\n");
-	imprimeIndice(CP);
+	imprimeIndicePrimario(CP);
 	free(CP);
 	
 	printf("lista 1:\n");
-	CP = criaIndice((char*)"lista1.txt");
-	imprimeIndice(CP);
-	ordenaIndice(CP, primeiroElementoIndice(CP), ultimoElementoIndice(CP));
+	CP = criaIndicePrimario((char*)"lista1.txt");
+	imprimeIndicePrimario(CP);
+	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
 	printf("Sorted:\n");
-	imprimeIndice(CP);
+	imprimeIndicePrimario(CP);
 	free(CP);
 
-	intercalaListas((char*)"lista1.txt", (char*)"lista2.txt");
+	intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
 
 
 	return 0;
