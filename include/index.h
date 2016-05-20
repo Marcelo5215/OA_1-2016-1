@@ -6,8 +6,15 @@
 	#include <string.h>
 	#include <ctype.h>
 	#define TAM_REG 64
+	#define TAM_MATRIC 7
+	#define TAM_NOME 41
+	#define TAM_OP 4
+	#define TAM_CURSO 9
+	#define TAM_TURMA 1
 
-	typedef struct index_P indexI;
+	typedef struct index_P indexI;	// indice primario
+	typedef struct indexS_P indexS; // indice secundario
+
 
 	int primeiroElementoIndicePrimario(indexI *ind);
 	int ultimoElementoIndicePrimario(indexI *ind);
@@ -18,5 +25,9 @@
 	void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq);
 	void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria);
 	void intercalaListasPrimario(char* lista1, char* lista2);
+
+	indexS* criaIndiceSecundario(char* nomeArq, int OP);
+	void imprimeIndiceSecundario(indexS* ind);
+	void limpaIndiceSecundario(indexS* ind);
 
 #endif

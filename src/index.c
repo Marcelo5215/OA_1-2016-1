@@ -2,11 +2,26 @@
 
 #define FIM_IND "final"
 
+//estrutura para o indice primario
 struct index_P{
 	char key[31];
 	long int byte_offset;
 	int tamanho;
 };
+
+//estruturas para o indice secudario
+typedef struct labels{
+	char chave[31];
+	int pont;
+}labels;
+
+struct indexS_P{
+	labels *CS;
+	labels *Lab;
+	int tamanhoC, tamanhoL;
+};
+
+//FUNCOES PARA TRATAR INDICES PRIMARIOS
 
 int primeiroElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
@@ -60,7 +75,6 @@ indexI* criaIndicePrimario(char* nomeArq){
 		//calcula o byte_offset do prox
 		byte_offset = byte_offset + TAM_REG;
 
-// 		fgetc(fp);
 	}
 	//um espaco será sempre alocado a mais, agora usaremos ele para indicar o final...
 	strcpy(CP[tam_indice-1].key, FIM_IND);
@@ -126,7 +140,7 @@ void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
 	}
 } 
 
-
+//procura pelo registro com determinada chave, busca binaria
 void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 	FILE *fp = fopen(nomeArq, "r");
 	char string[64];
@@ -143,7 +157,6 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 		int meio = (i + j) / 2;
 		
 		if (strcmp(ind[meio].key, chave_primaria) == 0) {
-// 			return ind[meio].key;
 			fseek(fp, ind[meio].byte_offset, SEEK_SET);
 			fscanf(fp, "%[^\n]\n", string);
 			printf("%s\n", string);
@@ -156,7 +169,6 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 	}
 	
 	if(strcmp(ind[j].key, chave_primaria) == 0) {
-// 		return ind[i].key;
 		fseek(fp, ind[i].byte_offset, SEEK_SET);
 		fscanf(fp, "%[^\n]\n", string);
 		printf("%s\n", string);
@@ -166,6 +178,7 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 	return;
 }
 
+//retorna a string correspondente ao regidtro na posição desejada
 char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
@@ -224,6 +237,109 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	fclose(saida);
 	free(CP1);
 	free(CP2);
+}
+
+//FUNÇÕES PARA TRATAR INDICES SECUNDARIOS
+
+indexS* criaIndiceSecundario(char* nomeArq, int OP){
+	FILE *fp = fopen(nomeArq, "r");
+	indexS* IS = (indexS*)malloc(sizeof(indexS));
+	IS->CS = (labels*)malloc(sizeof(labels));
+	IS->Lab = (labels*)malloc(sizeof(labels));
+
+	char string[64];
+	char chave[31], chaveSe[31];
+	int i, j, Lab_count = 1, CS_count = 1;
+	int flag = 0;
+	while(fscanf(fp, "%[^\n]\n", string) > 0){
+		for (i = 0; i < 31; ++i){
+			chave[i] = ' ';
+		}
+		chave[31] ='\0';
+		//adquiri e concatena os campos para fazer a chave primaria
+		i=0; j=0;
+		while(i < 31){
+			if(string[j] != ' '){
+				chave[i] = string[j];
+				i++; j++;
+			}
+			else if(string[j] == ' ' && string[j+1] == ' '){
+				break;
+			}
+			else
+				j++;
+		}
+		chave[31] ='\0';
+
+		//monta a chave secundaria
+		switch(OP){
+			case 0:
+				chaveSe[0] = string[52];
+				chaveSe[1] = string[53];
+				chaveSe[2] = '\0';
+				break;
+			default:
+				exit(0);
+		}
+		
+		//atribui a nova chave secundaria e sua respectiva chave primaria
+		strcpy(IS->Lab[Lab_count-1].chave, chave);
+		flag = 0;
+		//verifica se ja existe tal chave Secundaria
+		for(i=0; i < CS_count && flag < 1; i++){
+			if(strcmp(IS->CS[i].chave, chaveSe) == 0){
+				flag = 1;
+			}
+		}
+		if(!flag){
+			strcpy(IS->CS[CS_count-1].chave, chaveSe);
+			IS->CS[CS_count-1].pont = Lab_count-1;
+			CS_count++;
+			IS->Lab[Lab_count-1].pont = Lab_count-1;
+			Lab_count++;
+		}
+		else{//monta os ponteiros das chavesP
+			i= IS->CS[i-1].pont;
+			do{
+				i = IS->Lab[i].pont;
+			}while(IS->Lab[i].pont != i );
+			IS->Lab[i].pont = Lab_count-1;
+			IS->Lab[Lab_count-1].pont = Lab_count-1;
+			Lab_count++; 
+		}	
+
+		//aloca mais espaço para o proximo
+		IS->CS = (labels*)realloc(IS->CS, sizeof(labels)*CS_count);
+		IS->Lab = (labels*)realloc(IS->Lab, sizeof(labels)*Lab_count);
+	}
+	strcpy(IS->CS[CS_count-1].chave, FIM_IND);
+	strcpy(IS->Lab[Lab_count-1].chave, FIM_IND);
+
+	IS->tamanhoC =  CS_count-1;
+	IS->tamanhoL =  Lab_count-1;
+
+	fclose(fp);
+	return(IS);
+}
+
+void imprimeIndiceSecundario(indexS* ind){
+	int i=0;
+	while(i < ind->tamanhoC){
+		printf("%s - %4d\n", ind->CS[i].chave, ind->CS[i].pont);
+		i++;
+	}
+	printf("\n");
+	i=0;
+	while(i < ind->tamanhoL){
+		printf("%s - %4d\n", ind->Lab[i].chave, ind->Lab[i].pont);
+		i++;
+	}
+}
+
+void limpaIndiceSecundario(indexS* ind){
+	free(ind->CS);
+	free(ind->Lab);
+	free(ind);
 }
 
 #undef FIM_IND

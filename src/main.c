@@ -31,5 +31,11 @@ int main(int agrc, char** argv){
 
 	intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
 
+	printf("Indice Secundario baseado em Cursos\n");
+	indexS* CS = criaIndiceSecundario((char*)"lista1.txt", 0);
+	imprimeIndiceSecundario(CS);
+
+	limpaIndiceSecundario(CS);
+
 	return 0;
 }
