@@ -295,16 +295,21 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 			strcpy(IS->CS[CS_count-1].chave, chaveSe);
 			IS->CS[CS_count-1].pont = Lab_count-1;
 			CS_count++;
-			IS->Lab[Lab_count-1].pont = Lab_count-1;
+// 			IS->Lab[Lab_count-1].pont = Lab_count-1;
+			IS->Lab[Lab_count-1].pont = -1;
 			Lab_count++;
 		}
 		else{//monta os ponteiros das chavesP
 			i= IS->CS[i-1].pont;
-			do{
+			/*do{
 				i = IS->Lab[i].pont;
-			}while(IS->Lab[i].pont != i );
+			}while(IS->Lab[i].pont != -1 );*/
+			while (IS->Lab[i].pont != -1 ) {
+				i = IS->Lab[i].pont;
+			}
 			IS->Lab[i].pont = Lab_count-1;
-			IS->Lab[Lab_count-1].pont = Lab_count-1;
+// 			IS->Lab[Lab_count-1].pont = Lab_count-1;
+			IS->Lab[Lab_count-1].pont = -1;
 			Lab_count++; 
 		}	
 
