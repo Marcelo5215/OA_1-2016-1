@@ -21,7 +21,7 @@ int main(int agrc, char** argv){
 	printf("\tSorted:\n");
 	imprimeIndicePrimario(CP);
 	imprimeIndicePrimarioArq(CP, (char*)"indicelista1.ind");
-
+	
 	CP = incluirRegistroPrimario("lista1.txt", CP,
 		"151234 Bernardo Nandes da Silva                 22  EM       C");
 	CP = incluirRegistroPrimario("lista1.txt", CP,

@@ -29,8 +29,7 @@ struct indexS_P{
 };
 
 int primeiroElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : 0; }
-//Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
-//que não está incluido no tamanho
+//Há ind->tamanho elementos, de 0 até ind->tamanho -1, incluindo FIM_IND que eh o ind->tamanho - 1
 int ultimoElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
 
 /* Cria um indice a partir de um arquivo do modo especificado:      *
@@ -125,7 +124,7 @@ void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita){
 	char pivo[31];
 	strcpy(pivo, ind->vet_ind[esquerda].key);
 	indexI temp;
-
+	
 	while(j >= i){
 		while(strcmp(ind->vet_ind[i].key, pivo) < 0){
 			i++;
@@ -313,7 +312,7 @@ tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim* ind, cha
 	}
 	ind->vet_ind[j].byte_offset = maior + TAM_REG;
 
-	fprintf(fp, "%s \n", registro);
+	fprintf(fp, "%s\n", registro);
 	fclose(fp);
 
 	return ind;
