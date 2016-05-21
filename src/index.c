@@ -2,7 +2,6 @@
 
 #define FIM_IND "final"
 
-
 struct index_P{
 	char key[31];
 	long int byte_offset;
@@ -156,6 +155,44 @@ char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	fscanf(fp,"%[^\n]\n", saida);
 
 	return saida;
+}
+
+//procura pelo registro com determinada chave, busca binaria
+void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
+	FILE *fp = fopen(nomeArq, "r");
+	char string[64];
+	int i, j;
+	if (fp == NULL) {
+		printf("Arquivo inexistente\n");
+		return;
+	}
+	
+	i = primeiroElementoIndicePrimario(ind);
+	j = ultimoElementoIndicePrimario(ind);
+	
+	while (i < j) {
+		int meio = (i + j) / 2;
+		
+		if (strcmp(ind[meio].key, chave_primaria) == 0) {
+			fseek(fp, ind[meio].byte_offset, SEEK_SET);
+			fscanf(fp, "%[^\n]\n", string);
+			printf("%s\n", string);
+			return;
+		} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
+			i = meio + 1;
+		} else {
+			j = meio - 1;
+		}
+	}
+	
+	if(i == j && strcmp(ind[j].key, chave_primaria) == 0) {
+		fseek(fp, ind[i].byte_offset, SEEK_SET);
+		fscanf(fp, "%[^\n]\n", string);
+		printf("%s\n", string);
+		return;
+	}
+	printf("Nao existe essa chave\n");
+	return;
 }
 
 // cria um arquivo com as duas listas intercaladas
