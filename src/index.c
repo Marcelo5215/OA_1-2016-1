@@ -2,18 +2,19 @@
 
 #define FIM_IND "final"
 
-struct LED_P {
-	int PRR;
-	int size;
-	struct LED_P *next;
-};
 
-//estrutura para o indice primario
 struct index_P{
 	char key[31];
 	long int byte_offset;
+};
+
+typedef struct index_P indexI;
+
+struct tableindex_P {
+	indexI *vet_ind;
+	// index_S *vet_ind_sec_asso;
 	int tamanho;
-	LED *espac_disp;
+	int num_ind_sec;
 };
 
 //estruturas para o indice secundario
@@ -27,30 +28,30 @@ struct indexS_P{
 	labels *Lab;
 	int tamanhoC, tamanhoL;
 };
-//FUNCOES PARA TRATAR INDICES PRIMARIOS
 
-int primeiroElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : 0; }
+int primeiroElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, nao incluindo FIM_IND
 //que não está incluido no tamanho
-int ultimoElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
+int ultimoElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
 
 /* Cria um indice a partir de um arquivo do modo especificado:      *
  * MATRIC       NOME                      OP   CURSO  TURMA         *                    
  * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
  * com uma chave primaria que e a concatenacao dos campos matricula *
  * e nome.                                                          */
-indexI* criaIndicePrimario(char* nomeArq){
+tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
 	FILE* fp;
 	fp = fopen(nomeArq, "r+");
 
 	char stringAUX[64];      //servira apenas para ler as linhas do arquivo
 	char chave[31];          //servira para adotarmos a chave primaria de cada registro
 	long int byte_offset = 0;
-	int tam_indice = 1 , i, j;        //tamanho atual do indice
+	int tam_indice = 1;        //tamanho atual do indice
+	int i, j;
 	
-	indexI* CP = (indexI*) malloc(sizeof(indexI));    //indice de Chaves Primarias
-	CP->espac_disp = NULL;
-	CP[0].tamanho = 0;
+	tabelaInd_Prim* CP = (tabelaInd_Prim*) malloc(sizeof(tabelaInd_Prim));    //tabela de indices de Chaves Primarias
+	CP->vet_ind = (indexI *) malloc(sizeof(indexI));
+	CP->tamanho = 0;
 	
 	while(fscanf(fp,"%[^\n]\n", stringAUX) > 0){
 		for (i = 0; i < 31; ++i){
@@ -73,19 +74,21 @@ indexI* criaIndicePrimario(char* nomeArq){
 		chave[31] ='\0';
 
 		//atribui os valores ao indice
-		CP[tam_indice-1].byte_offset = byte_offset;
-		strcpy(CP[tam_indice-1].key, chave);
-		CP[0].tamanho++;
+		CP->vet_ind[tam_indice-1].byte_offset = byte_offset;
+		strcpy(CP->vet_ind[tam_indice-1].key, chave);
+		CP->tamanho++;
 		tam_indice++; 
 
 		//aloca mais um espaco para o proximo registro no indice 
-		CP = (indexI*)realloc(CP, sizeof(indexI)*tam_indice);
+		CP->vet_ind = (indexI *) realloc(CP->vet_ind, sizeof(indexI) * tam_indice);
 		//calcula o byte_offset do prox
 		byte_offset = byte_offset + TAM_REG;
 
 	}
 	//um espaco será sempre alocado a mais, agora usaremos ele para indicar o final...
-	strcpy(CP[tam_indice-1].key, FIM_IND);
+	strcpy(CP->vet_ind[tam_indice-1].key, FIM_IND);
+	CP->vet_ind[tam_indice-1].byte_offset = 0;
+	CP->tamanho = tam_indice;
 
 	fclose(fp);
 
@@ -93,134 +96,64 @@ indexI* criaIndicePrimario(char* nomeArq){
 }
 
 //imprime o indice
-void imprimeIndicePrimario(indexI* ind){
+void imprimeIndicePrimario(tabelaInd_Prim* ind){
 	int i=0;
 
-	while(strcmp(ind[i].key, FIM_IND) != 0){
-		printf("%s --- %10ld\n", ind[i].key, ind[i].byte_offset);
+	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
+		printf("%s --- %10ld\n", ind->vet_ind[i].key, ind->vet_ind[i].byte_offset);
 		i++;
 	}
-	printf("%s\n", ind[i].key);
+	printf("%s\n", ind->vet_ind[i].key);
 }
 
-//cria um arquivo com os indices primarios
-void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq){
+void imprimeIndicePrimarioArq(tabelaInd_Prim* ind, char* nomeArq){
 	FILE *fp = fopen(nomeArq, "w");
 
 	for(int i = 0 ; i < ultimoElementoIndicePrimario(ind) ; i++){
-		fprintf(fp, "%s       %10ld\n", ind[i].key, ind[i]. byte_offset);
+		fprintf(fp, "%s       %10ld\n", ind->vet_ind[i].key, ind->vet_ind[i]. byte_offset);
 	}
 
 	fclose(fp);
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo
-void ordenaIndicePrimario(indexI* ind, const int esquerda, const int direita){
-// 	printf("ordenaIndicePrimario(%d,%d) %p\n", esquerda, direita, ind);
-// 	printf("%d\n", ind->tamanho);
+void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita){
 	if(direita >  ind->tamanho){
 		printf("Tamanho inadequado.\n");
 		return;
 	}
 	int i = esquerda, j = direita;
 	char pivo[31];
-	int ind_pivo;
+	strcpy(pivo, ind->vet_ind[esquerda].key);
 	indexI temp;
-	
-	strcpy(pivo, ind[esquerda].key);
-	ind_pivo = esquerda;
-// 	printf("Pivo:%s\n", pivo);
-	while(i <= j){
-		while(strcmp(ind[i].key, pivo) <= 0){
-// 			printf("i: %s->%d\n", ind[i].key, i);
+
+	while(j >= i){
+		while(strcmp(ind->vet_ind[i].key, pivo) < 0){
 			i++;
 		}
-		while(strcmp(ind[j].key, pivo) > 0){
-// 			printf("j: %s->%d\n", ind[j].key, j);
+		while(strcmp(ind->vet_ind[j].key, pivo) > 0){
 			j--;
 		}
-		if(i <= j){
-// 			printf("Troca: ");
-// 			printf("i: %s->%d\t", ind[i].key, i);
-// 			printf("j: %s->%d\n", ind[j].key, j);
-			
-			if (i == ind_pivo) {
-				ind_pivo = j;
-			} else if (j == ind_pivo) {
-				ind_pivo = i;
-			}
-			
-			temp = ind[i];
-			ind[i] = ind[j];
-			ind[j] = temp;
+		if(j >= i){
+			temp = ind->vet_ind[i];
+			ind->vet_ind[i] = ind->vet_ind[j];
+			ind->vet_ind[j] = temp;
 			i++;
 			j--;
-// 		imprimeIndicePrimario(ind);
 		}
-	}
-	
-// 	printf("(%d,%d)\n", i, j);
-	
-	temp = ind[i - 1];
-	ind[i - 1] = ind[ind_pivo];
-	ind[ind_pivo] = temp;
-	ind_pivo = i - 1;
-	j = ind_pivo - 1;
-	i = ind_pivo + 1;
-	
+	};
 	if(j > esquerda){
-// 		imprimeIndicePrimario(ind);
 		ordenaIndicePrimario(ind, esquerda, j);
 	}
 	if(i < direita){
-// 		imprimeIndicePrimario(ind);
 		ordenaIndicePrimario(ind, i, direita);
 	}
 } 
 
-//procura pelo registro com determinada chave, busca binaria
-void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
-	FILE *fp = fopen(nomeArq, "r");
-	char string[64];
-	int i, j;
-	if (fp == NULL) {
-		printf("Arquivo inexistente\n");
-		return;
-	}
-	
-	i = primeiroElementoIndicePrimario(ind);
-	j = ultimoElementoIndicePrimario(ind);
-	
-	while (i < j) {
-		int meio = (i + j) / 2;
-		
-		if (strcmp(ind[meio].key, chave_primaria) == 0) {
-			fseek(fp, ind[meio].byte_offset, SEEK_SET);
-			fscanf(fp, "%[^\n]\n", string);
-			printf("%s\n", string);
-			return;
-		} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
-			i = meio + 1;
-		} else {
-			j = meio - 1;
-		}
-	}
-	
-	if(i == j && strcmp(ind[j].key, chave_primaria) == 0) {
-		fseek(fp, ind[i].byte_offset, SEEK_SET);
-		fscanf(fp, "%[^\n]\n", string);
-		printf("%s\n", string);
-		return;
-	}
-	printf("Nao existe essa chave\n");
-	return;
-}
-
-//retorna a string correspondente ao registro na posição desejada
 char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
-	fscanf(fp,"%[^\n]s", saida);
+	fscanf(fp,"%[^\n]\n", saida);
 
 	return saida;
 }
@@ -233,8 +166,8 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	fp2 = fopen(lista2, "r");
 	saida = fopen("lista12.txt", "w");
 	//indices das listas
-	indexI* CP1 = criaIndicePrimario(lista1);
-	indexI* CP2 = criaIndicePrimario(lista2);
+	tabelaInd_Prim* CP1 = criaIndicePrimario(lista1);
+	tabelaInd_Prim* CP2 = criaIndicePrimario(lista2);
 
 	//ordena os indices
 	ordenaIndicePrimario(CP1, primeiroElementoIndicePrimario(CP1), ultimoElementoIndicePrimario(CP1));
@@ -242,30 +175,30 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 
 	//a partir dos indices une as listas
 	int i = 0 , j = 0;
-	while(strcmp(CP1[i].key, FIM_IND) != 0 && strcmp(CP2[j].key, FIM_IND) != 0){
-		if(strcmp(CP1[i].key, CP2[j].key) < 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
+	while(strcmp(CP1->vet_ind[i].key, FIM_IND) != 0 && strcmp(CP2->vet_ind[j].key, FIM_IND) != 0){
+		if(strcmp(CP1->vet_ind[i].key, CP2->vet_ind[j].key) < 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1->vet_ind[i].byte_offset));
 			i++;
 		}
-		else if(strcmp(CP2[j].key, CP1[i].key) < 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+		else if(strcmp(CP2->vet_ind[j].key, CP1->vet_ind[i].key) < 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			j++;
 		}
 		else{
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			i++; j++;
 		}
 	}
 	// se algum dos dois não  chegou ao fim...
-	if(strcmp(CP1[i].key, FIM_IND) == 0){
-		while(strcmp(CP2[j].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2[j].byte_offset));
+	if(strcmp(CP1->vet_ind[i].key, FIM_IND) == 0){
+		while(strcmp(CP2->vet_ind[j].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp2, CP2->vet_ind[j].byte_offset));
 			j++;
 		}
 	} 
-	else if(strcmp(CP2[j].key, FIM_IND) == 0){
-		while(strcmp(CP1[i].key, FIM_IND) != 0){
-			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1[i].byte_offset));
+	else if(strcmp(CP2->vet_ind[j].key, FIM_IND) == 0){
+		while(strcmp(CP1->vet_ind[i].key, FIM_IND) != 0){
+			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1->vet_ind[i].byte_offset));
 			i++;
 		}
 	}
@@ -277,24 +210,19 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	free(CP2);
 }
 
-indexI *incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
+tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim* ind, char *registro) {
 	
-	LED *iterator, *prev = NULL;
-	int t = strlen(registro);
-	char chave_primaria[31];
+	FILE * fp = fopen(nomeArq, "a");
 	int i = 0, j = 0;
-	FILE *fp;
-	
-	int posicao = 0;
-	
-	if (t != 62) {
-		printf("Registro incompleto\n");
-		return ind;
-	}
+	indexI AUX, temp;
+	char chave_primaria[31];
+
 	for (i = 0; i < 31; ++i){
 		chave_primaria[i] = ' ';
 	}
-	i = 0;
+	chave_primaria[31] ='\0';
+	//monta a chave primaria do registro
+	i=0; j=0;
 	while(i < 31){
 		if(registro[j] != ' '){
 			chave_primaria[i] = registro[j];
@@ -307,219 +235,53 @@ indexI *incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 			j++;
 	}
 	chave_primaria[31] ='\0';
-		
-	
-	//melhor ajuste
-	//nao eh necessario, ja que os registros tem tamanho fixo
-	for (iterator = ind->espac_disp; iterator != NULL; iterator = iterator->next) {
-		if (iterator->size >= t) {
-			fp = fopen(nomeArq, "a");
-			
-			//atualiza indexI *ind
-			{
-				i = primeiroElementoIndicePrimario(ind);
-				j = ultimoElementoIndicePrimario(ind);
-				
-				while (i < j) {
-					int meio = (i + j) / 2;
-					
-					if (strcmp(ind[meio].key, chave_primaria) == 0) {
-						printf("ERRO: Chave primaria repetida\n");
-						return ind;
-					} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
-						i = meio + 1;
-					} else {
-						j = meio - 1;
-					}
-				}
-				if (i == j) {
-					if (strcmp(ind[i].key, chave_primaria) == 0) {
-						printf("ERRO: Chave primaria repetida\n");
-						return ind;
-					} else if (strcmp(ind[i].key, chave_primaria) < 0) {
-						int k = i + 1;
-						indexI temp, move;
-						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-						
-						if (k > ultimoElementoIndicePrimario(ind)) {
-							strcpy(ind[i + 1].key, chave_primaria);
-							ind[i + 1].byte_offset = iterator->PRR;
-							
-							strcpy(ind[i + 2].key, FIM_IND);
-						} else {
-							
-							move = ind[k];
-							
-							for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-								temp = ind[k];
-								ind[k] = move;
-								move = temp;
-							}
-							ind[k] = move;
-							
-							strcpy(ind[i + 1].key, chave_primaria);
-							ind[i + 1].byte_offset = iterator->PRR;
-						}
-						ind->tamanho++;
-					} else {
-						int k = i;
-						indexI temp, move;
-						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-						
-						move = ind[k];
-						
-						for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-							temp = ind[k];
-							ind[k] = move;
-							move = temp;
-						}
-						ind[k] = move;
-						
-						strcpy(ind[i + 1].key, chave_primaria);
-						ind[i + 1].byte_offset = iterator->PRR;
-						
-						ind->tamanho++;
-					}
-				} else {
-					int k = i;
-					indexI temp, move;
-					ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-					
-					move = ind[k];
-					
-					for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-						temp = ind[k];
-						ind[k] = move;
-						move = temp;
-					}
-					ind[k] = move;
-					
-					strcpy(ind[i + 1].key, chave_primaria);
-					ind[i + 1].byte_offset = iterator->PRR;
-					
-					ind->tamanho++;
-				}
-			}
-			//atualiza arquivo
-			fseek(fp, iterator->PRR, SEEK_SET);
-			fprintf(fp, "%s\n", registro);
-			
-			//atualiza LED
-			
-			if (prev == NULL) {
-				ind->espac_disp = iterator->next;
-			} else {
-				prev->next = iterator->next;
-			}
-			free(iterator);
+
+	i=0;
+	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
+		if(strcmp(ind->vet_ind[i].key, chave_primaria) == 0){
+			printf("Registro já existente\n");
 			fclose(fp);
 			return ind;
 		}
-		prev = iterator;
+		i++;
 	}
-	//sem espaco disponível
-	
-	fp = fopen(nomeArq, "a");
-	
-	//atualiza indexI *ind
-	{
-		i = primeiroElementoIndicePrimario(ind);
-		j = ultimoElementoIndicePrimario(ind);
-		
-		while (i < j) {
-			int meio = (i + j) / 2;
-			
-			if (strcmp(ind[meio].key, chave_primaria) == 0) {
-				printf("ERRO: Chave primaria repetida\n");
-				return ind;
-			} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
-				i = meio + 1;
-			} else {
-				j = meio - 1;
-			}
-		}
-		
-		if (i == j) {
-			if (strcmp(ind[i].key, chave_primaria) == 0) {
-				printf("ERRO: Chave primaria repetida\n");
-				return ind;
-			} else if (strcmp(ind[i].key, chave_primaria) < 0) {
-				int k = i + 1;
-				indexI temp, move;
-				
-				ind = (indexI *) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-				
-				if (k > ultimoElementoIndicePrimario(ind)) {
-					strcpy(ind[i + 1].key, chave_primaria);
-					ind[i + 1].byte_offset = ind->tamanho * TAM_REG;
-					strcpy(ind[i + 2].key, FIM_IND);
-				} else {
-				
-					move = ind[k];
-					
-					for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-						temp = ind[k];
-						ind[k] = move;
-						move = temp;
-					}
-					ind[k] = move;
-					
-					strcpy(ind[i + 1].key, chave_primaria);
-					ind[i + 1].byte_offset = ind->tamanho * TAM_REG;
-				}
-				posicao = i + 1;
-				ind->tamanho++;
-			} else {
-				int k = i;
-				indexI temp, move;
-				ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-				
-				move = ind[k];
-				
-				for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-					temp = ind[k];
-					ind[k] = move;
-					move = temp;
-				}
-				ind[k] = move;
-				
-				strcpy(ind[i].key, chave_primaria);
-				ind[i].byte_offset = ind->tamanho * TAM_REG;
-				
-				posicao = i;
-				ind->tamanho++;
-			}
-		} else {
-			int k = i;
-			indexI temp, move;
-			ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
-			
-			move = ind[k];
-			
-			for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
-				temp = ind[k];
-				ind[k] = move;
-				move = temp;
-			}
-			ind[k] = move;
-			
-			strcpy(ind[i].key, chave_primaria);
-			ind[i].byte_offset = ind->tamanho * TAM_REG;
-			
-			posicao = i;
-			ind->tamanho++;
-		}
+
+	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
+	i = 0;
+	//prcura o local que deve ser adicionado
+	while(strcmp(ind->vet_ind[i].key, chave_primaria) < 0){
+		i++;
 	}
-	
-	//atualiza arquivo
-	fseek(fp, ind[posicao].byte_offset, SEEK_SET);
-	fprintf(fp, "%s\n", registro);
+	j = i;
+	ind->tamanho++;
+	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
+	strcpy(ind->vet_ind[ind->tamanho-1].key, FIM_IND);
+
+	//passa todos do local a ser inserido para a frente
+	i =  ultimoElementoIndicePrimario(ind);
+	while(i > j){
+		AUX = ind->vet_ind[i-1];
+		ind->vet_ind[i] = ind->vet_ind[i-1];
+		i--;
+	}
+	strcpy(ind->vet_ind[j].key, chave_primaria);
+	//atualiza o byte_offset do elemento inserido, como foi inserido ao final do arquivo só é necessário colocar o dele
+	long int maior = 0;
+	i=0;
+	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
+		if(ind->vet_ind[i].byte_offset >= maior){
+			maior = ind->vet_ind[i].byte_offset;
+		}
+		i++;
+	}
+	ind->vet_ind[j].byte_offset = maior + TAM_REG;
+
+	fprintf(fp, "%s \n", registro);
 	fclose(fp);
-	
+
 	return ind;
 }
 
-//FUNÇÕES PARA TRATAR INDICES SECUNDARIOS
 
 indexS* criaIndiceSecundario(char* nomeArq, int OP){
 	FILE *fp = fopen(nomeArq, "r");
@@ -575,20 +337,15 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 			strcpy(IS->CS[CS_count-1].chave, chaveSe);
 			IS->CS[CS_count-1].pont = Lab_count-1;
 			CS_count++;
-// 			IS->Lab[Lab_count-1].pont = Lab_count-1;
 			IS->Lab[Lab_count-1].pont = -1;
 			Lab_count++;
 		}
 		else{//monta os ponteiros das chavesP
 			i= IS->CS[i-1].pont;
-			/*do{
-				i = IS->Lab[i].pont;
-			}while(IS->Lab[i].pont != -1 );*/
 			while (IS->Lab[i].pont != -1 ) {
 				i = IS->Lab[i].pont;
 			}
 			IS->Lab[i].pont = Lab_count-1;
-// 			IS->Lab[Lab_count-1].pont = Lab_count-1;
 			IS->Lab[Lab_count-1].pont = -1;
 			Lab_count++; 
 		}	
