@@ -158,7 +158,7 @@ char* getRegistroPrimario(FILE* fp, long int byte_offset){
 }
 
 //procura pelo registro com determinada chave, busca binaria
-void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
+void findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria) {
 	FILE *fp = fopen(nomeArq, "r");
 	char string[64];
 	int i, j;
@@ -173,20 +173,20 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 	while (i < j) {
 		int meio = (i + j) / 2;
 		
-		if (strcmp(ind[meio].key, chave_primaria) == 0) {
-			fseek(fp, ind[meio].byte_offset, SEEK_SET);
+		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
+			fseek(fp, ind->vet_ind[meio].byte_offset, SEEK_SET);
 			fscanf(fp, "%[^\n]\n", string);
 			printf("%s\n", string);
 			return;
-		} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
+		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
 			i = meio + 1;
 		} else {
 			j = meio - 1;
 		}
 	}
 	
-	if(i == j && strcmp(ind[j].key, chave_primaria) == 0) {
-		fseek(fp, ind[i].byte_offset, SEEK_SET);
+	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
+		fseek(fp, ind->vet_ind[i].byte_offset, SEEK_SET);
 		fscanf(fp, "%[^\n]\n", string);
 		printf("%s\n", string);
 		return;

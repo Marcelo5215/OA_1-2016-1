@@ -4,19 +4,21 @@
 #include "index.h"
 
 int main(int agrc, char** argv){
+	
+	printf("\tlista 2:\n");
 	tabelaInd_Prim* CP = criaIndicePrimario((char*)"lista2.txt");
 	imprimeIndicePrimario(CP);
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
-	printf("Sorted:\n");
+	printf("\tSorted:\n");
 	imprimeIndicePrimario(CP);
 	imprimeIndicePrimarioArq(CP, (char*)"indicelista2.ind");
 	free(CP);
 	
-	printf("lista 1:\n");
+	printf("\tlista 1:\n");
 	CP = criaIndicePrimario((char*)"lista1.txt");
 	imprimeIndicePrimario(CP);
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
-	printf("Sorted:\n");
+	printf("\tSorted:\n");
 	imprimeIndicePrimario(CP);
 	imprimeIndicePrimarioArq(CP, (char*)"indicelista1.ind");
 
@@ -27,6 +29,7 @@ int main(int agrc, char** argv){
 	CP = incluirRegistroPrimario("lista1.txt", CP,
 		"044442 Blabla blabla blabla bla                 99  CC       B");
 
+	printf("\tApos mais elementos:\n");
 	imprimeIndicePrimario(CP);
 	free(CP);
 
