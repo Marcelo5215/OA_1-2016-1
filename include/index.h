@@ -14,6 +14,7 @@
 
 	typedef struct index_P indexI;	// indice primario
 	typedef struct indexS_P indexS; // indice secundario
+	typedef struct LED_P LED; // Lista de espacos disponíveis
 
 
 	int primeiroElementoIndicePrimario(indexI *ind);
@@ -25,6 +26,8 @@
 	void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq);
 	void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria);
 	void intercalaListasPrimario(char* lista1, char* lista2);
+	
+	void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro);
 
 	indexS* criaIndiceSecundario(char* nomeArq, int OP);
 	void imprimeIndiceSecundario(indexS* ind);

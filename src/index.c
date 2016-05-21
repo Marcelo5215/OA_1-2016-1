@@ -2,14 +2,21 @@
 
 #define FIM_IND "final"
 
+struct LED_P {
+	int PRR;
+	int size;
+	struct LED_P *next;
+};
+
 //estrutura para o indice primario
 struct index_P{
 	char key[31];
 	long int byte_offset;
 	int tamanho;
+	LED *espac_disp;
 };
 
-//estruturas para o indice secudario
+//estruturas para o indice secundario
 typedef struct labels{
 	char chave[31];
 	int pont;
@@ -20,7 +27,6 @@ struct indexS_P{
 	labels *Lab;
 	int tamanhoC, tamanhoL;
 };
-
 //FUNCOES PARA TRATAR INDICES PRIMARIOS
 
 int primeiroElementoIndicePrimario(indexI *ind) { return (ind == NULL) ? -1 : 0; }
@@ -42,8 +48,10 @@ indexI* criaIndicePrimario(char* nomeArq){
 	long int byte_offset = 0;
 	int tam_indice = 1 , i, j;        //tamanho atual do indice
 	
-	indexI* CP = (indexI*)malloc(sizeof(indexI));    //indice de Chaves Primarias
+	indexI* CP = (indexI*) malloc(sizeof(indexI));    //indice de Chaves Primarias
+	CP->espac_disp = NULL;
 	CP[0].tamanho = 0;
+	
 	while(fscanf(fp,"%[^\n]\n", stringAUX) > 0){
 		for (i = 0; i < 31; ++i){
 			chave[i] = ' ';
@@ -168,7 +176,7 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 		}
 	}
 	
-	if(strcmp(ind[j].key, chave_primaria) == 0) {
+	if(i == j && strcmp(ind[j].key, chave_primaria) == 0) {
 		fseek(fp, ind[i].byte_offset, SEEK_SET);
 		fscanf(fp, "%[^\n]\n", string);
 		printf("%s\n", string);
@@ -178,7 +186,7 @@ void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria) {
 	return;
 }
 
-//retorna a string correspondente ao regidtro na posição desejada
+//retorna a string correspondente ao registro na posição desejada
 char* getRegistroPrimario(FILE* fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
@@ -239,6 +247,217 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	free(CP2);
 }
 
+void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
+	
+	LED *iterator, *prev = NULL;
+	int t = strlen(registro);
+	char chave_primaria[31] = "                              "; //30 espacos
+	int i = 0, j = 0;
+	FILE *fp;
+	
+	if (t != 62) {
+		printf("Registro incompleto\n");
+		return;
+	}
+	for (j = 0; i < 30; j++){
+		if(registro[j] != ' '){
+			chave_primaria[i] = registro[j];
+			i++;
+		}
+		else if(registro[j] == ' ' && registro[j+1] == ' '){
+			break;
+		}
+	}
+	chave_primaria[30] ='\0';
+		
+	
+	//melhor ajuste
+	//nao eh necessario, ja que os registros tem tamanho fixo
+	for (iterator = ind->espac_disp; iterator != NULL; iterator = iterator->next) {
+		if (iterator->size >= t) {
+			fp = fopen(nomeArq, "a");
+			fseek(fp, iterator->PRR, SEEK_SET);
+			fprintf(fp, "%s\n", registro);
+			
+			//atualiza indexI *ind
+			{
+				i = primeiroElementoIndicePrimario(ind);
+				j = ultimoElementoIndicePrimario(ind);
+				
+				while (i < j) {
+					int meio = (i + j) / 2;
+					
+					if (strcmp(ind[meio].key, chave_primaria) == 0) {
+						printf("ERRO: Chave primaria repetida\n");
+						return;
+					} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
+						i = meio + 1;
+					} else {
+						j = meio - 1;
+					}
+				}
+				if (i == j) {
+					if (strcmp(ind[i].key, chave_primaria) == 0) {
+						printf("ERRO: Chave primaria repetida\n");
+						return;
+					} else if (strcmp(ind[i].key, chave_primaria) < 0) {
+						int k = i + 1;
+						indexI temp;
+						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
+						
+						temp = ind[k];
+						
+						for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
+							ind[k] = temp;
+							temp = ind[k];
+						}
+						ind[k] = temp;
+						
+						strcpy(ind[i + 1].key, chave_primaria);
+						ind[i + 1].byte_offset = iterator->PRR;
+						
+						ind->tamanho++;
+					} else {
+						int k = i;
+						indexI temp;
+						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
+						
+						temp = ind[k];
+						
+						for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
+							ind[k] = temp;
+							temp = ind[k];
+						}
+						ind[k] = temp;
+						
+						strcpy(ind[i + 1].key, chave_primaria);
+						ind[i + 1].byte_offset = iterator->PRR;
+						
+						ind->tamanho++;
+					}
+				} else {
+					int k = i;
+					indexI temp;
+					ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
+					
+					temp = ind[k];
+					
+					for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
+						ind[k] = temp;
+						temp = ind[k];
+					}
+					ind[k] = temp;
+					
+					strcpy(ind[i + 1].key, chave_primaria);
+					ind[i + 1].byte_offset = iterator->PRR;
+					
+					ind->tamanho++;
+				}
+			}
+			
+			//atualiza LED
+			
+			if (prev == NULL) {
+				ind->espac_disp = iterator->next;
+			} else {
+				prev->next = iterator->next;
+			}
+			free(iterator);
+			fclose(fp);
+			return;
+		}
+		prev = iterator;
+	}
+	//sem espaco disponível
+	
+	fp = fopen(nomeArq, "a");
+	fseek(fp, ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG, SEEK_SET);
+	fprintf(fp, "%s\n", registro);
+	
+	//atualiza indexI *ind
+	{
+		i = primeiroElementoIndicePrimario(ind);
+		j = ultimoElementoIndicePrimario(ind);
+		
+		while (i < j) {
+			int meio = (i + j) / 2;
+			
+			if (strcmp(ind[meio].key, chave_primaria) == 0) {
+				printf("ERRO: Chave primaria repetida\n");
+				return;
+			} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
+				i = meio + 1;
+			} else {
+				j = meio - 1;
+			}
+		}
+		if (i == j) {
+			if (strcmp(ind[i].key, chave_primaria) == 0) {
+				printf("ERRO: Chave primaria repetida\n");
+				return;
+			} else if (strcmp(ind[i].key, chave_primaria) < 0) {
+				int k = i + 1;
+				indexI temp;
+				int tam = ind->tamanho + 1;
+				ind->tamanho++;
+				tam++;
+				
+				printf("%d %s\n", ind->tamanho, ind[ind->tamanho-1].key);
+				ind = (indexI *) realloc(ind, sizeof (indexI) * tam);
+				printf("%d %s\n", ind->tamanho, ind[ind->tamanho-2].key);
+// 		CP = (indexI*)realloc(CP, sizeof(indexI)*tam_indice);
+				
+				temp = ind[k];
+				
+				for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) - 1; k++) {
+					ind[k] = temp;
+					temp = ind[k];
+				}
+				ind[k] = temp;
+				
+				strcpy(ind[i + 1].key, chave_primaria);
+				ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
+				
+			} else {
+				int k = i;
+				indexI temp;
+				ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
+				
+				temp = ind[k];
+				
+				for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
+					ind[k] = temp;
+					temp = ind[k];
+				}
+				ind[k] = temp;
+				
+				strcpy(ind[i + 1].key, chave_primaria);
+				ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
+				
+				ind->tamanho++;
+			}
+		} else {
+			int k = i;
+			indexI temp;
+			ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
+			
+			temp = ind[k];
+			
+			for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
+				ind[k] = temp;
+				temp = ind[k];
+			}
+			ind[k] = temp;
+			
+			strcpy(ind[i + 1].key, chave_primaria);
+			ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
+			
+			ind->tamanho++;
+		}
+	}
+	fclose(fp);
+}
+
 //FUNÇÕES PARA TRATAR INDICES SECUNDARIOS
 
 indexS* criaIndiceSecundario(char* nomeArq, int OP){
@@ -286,7 +505,7 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 		strcpy(IS->Lab[Lab_count-1].chave, chave);
 		flag = 0;
 		//verifica se ja existe tal chave Secundaria
-		for(i=0; i < CS_count && flag < 1; i++){
+		for(i=0; i < CS_count - 1 && flag < 1; i++){
 			if(strcmp(IS->CS[i].chave, chaveSe) == 0){
 				flag = 1;
 			}

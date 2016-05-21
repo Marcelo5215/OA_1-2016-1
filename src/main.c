@@ -27,6 +27,11 @@ int main(int agrc, char** argv){
 	findRegistroPrimario("lista1.txt", CP, "024312LeonardoNunesdeSouza     "); //inicio da lista
 	findRegistroPrimario("lista1.txt", CP, "035830RogerioAugustodeCastroNex"); //ultimo caracter errado -> nao existe
 	
+	incluirRegistroPrimario("lista1.txt", CP,
+		"151234 Bernardo Nandes da Silva                 22  EM       C");
+// 	incluirRegistroPrimario("lista1.txt", CP,
+// 		"000000 Fernando Costa da Silva                  99  CC       B");
+	
 	free(CP);
 
 	intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
