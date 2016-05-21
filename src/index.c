@@ -115,35 +115,65 @@ void imprimeIndicePrimarioArq(indexI* ind, char* nomeArq){
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo
-void ordenaIndicePrimario(indexI* ind, int esquerda, int direita){
-	if(direita >  ind[0].tamanho){
+void ordenaIndicePrimario(indexI* ind, const int esquerda, const int direita){
+// 	printf("ordenaIndicePrimario(%d,%d) %p\n", esquerda, direita, ind);
+// 	printf("%d\n", ind->tamanho);
+	if(direita >  ind->tamanho){
 		printf("Tamanho inadequado.\n");
 		return;
 	}
 	int i = esquerda, j = direita;
 	char pivo[31];
-	strcpy(pivo, ind[esquerda].key);
+	int ind_pivo;
 	indexI temp;
-
-	while(j >= i){
-		while(strcmp(ind[i].key, pivo) < 0){
+	
+	strcpy(pivo, ind[esquerda].key);
+	ind_pivo = esquerda;
+// 	printf("Pivo:%s\n", pivo);
+	while(i <= j){
+		while(strcmp(ind[i].key, pivo) <= 0){
+// 			printf("i: %s->%d\n", ind[i].key, i);
 			i++;
 		}
 		while(strcmp(ind[j].key, pivo) > 0){
+// 			printf("j: %s->%d\n", ind[j].key, j);
 			j--;
 		}
-		if(j >= i){
+		if(i <= j){
+// 			printf("Troca: ");
+// 			printf("i: %s->%d\t", ind[i].key, i);
+// 			printf("j: %s->%d\n", ind[j].key, j);
+			
+			if (i == ind_pivo) {
+				ind_pivo = j;
+			} else if (j == ind_pivo) {
+				ind_pivo = i;
+			}
+			
 			temp = ind[i];
 			ind[i] = ind[j];
 			ind[j] = temp;
 			i++;
 			j--;
+// 		imprimeIndicePrimario(ind);
 		}
-	};
+	}
+	
+// 	printf("(%d,%d)\n", i, j);
+	
+	temp = ind[i - 1];
+	ind[i - 1] = ind[ind_pivo];
+	ind[ind_pivo] = temp;
+	ind_pivo = i - 1;
+	j = ind_pivo - 1;
+	i = ind_pivo + 1;
+	
 	if(j > esquerda){
+// 		imprimeIndicePrimario(ind);
 		ordenaIndicePrimario(ind, esquerda, j);
 	}
 	if(i < direita){
+// 		imprimeIndicePrimario(ind);
 		ordenaIndicePrimario(ind, i, direita);
 	}
 } 

@@ -33,7 +33,7 @@ int main(int agrc, char** argv){
 		"000000 Fernando Costa da Silva                  99  CC       B");
 	CP = incluirRegistroPrimario("lista1.txt", CP,
 		"044442 Blabla blabla blabla bla                 99  CC       B");
-	return 0;
+// 	return 0;
 	imprimeIndicePrimario(CP);
 	
 	free(CP);
