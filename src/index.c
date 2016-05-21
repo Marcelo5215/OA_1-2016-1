@@ -247,28 +247,36 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	free(CP2);
 }
 
-void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
+indexI *incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 	
 	LED *iterator, *prev = NULL;
 	int t = strlen(registro);
-	char chave_primaria[31] = "                              "; //30 espacos
+	char chave_primaria[31];
 	int i = 0, j = 0;
 	FILE *fp;
 	
+	int posicao = 0;
+	
 	if (t != 62) {
 		printf("Registro incompleto\n");
-		return;
+		return ind;
 	}
-	for (j = 0; i < 30; j++){
+	for (i = 0; i < 31; ++i){
+		chave_primaria[i] = ' ';
+	}
+	i = 0;
+	while(i < 31){
 		if(registro[j] != ' '){
 			chave_primaria[i] = registro[j];
-			i++;
+			i++; j++;
 		}
 		else if(registro[j] == ' ' && registro[j+1] == ' '){
 			break;
 		}
+		else
+			j++;
 	}
-	chave_primaria[30] ='\0';
+	chave_primaria[31] ='\0';
 		
 	
 	//melhor ajuste
@@ -276,8 +284,6 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 	for (iterator = ind->espac_disp; iterator != NULL; iterator = iterator->next) {
 		if (iterator->size >= t) {
 			fp = fopen(nomeArq, "a");
-			fseek(fp, iterator->PRR, SEEK_SET);
-			fprintf(fp, "%s\n", registro);
 			
 			//atualiza indexI *ind
 			{
@@ -289,7 +295,7 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 					
 					if (strcmp(ind[meio].key, chave_primaria) == 0) {
 						printf("ERRO: Chave primaria repetida\n");
-						return;
+						return ind;
 					} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
 						i = meio + 1;
 					} else {
@@ -299,36 +305,45 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 				if (i == j) {
 					if (strcmp(ind[i].key, chave_primaria) == 0) {
 						printf("ERRO: Chave primaria repetida\n");
-						return;
+						return ind;
 					} else if (strcmp(ind[i].key, chave_primaria) < 0) {
 						int k = i + 1;
-						indexI temp;
+						indexI temp, move;
 						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 						
-						temp = ind[k];
-						
-						for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
-							ind[k] = temp;
-							temp = ind[k];
+						if (k > ultimoElementoIndicePrimario(ind)) {
+							strcpy(ind[i + 1].key, chave_primaria);
+							ind[i + 1].byte_offset = iterator->PRR;
+							
+							strcpy(ind[i + 2].key, FIM_IND);
+						} else {
+							
+							move = ind[k];
+							
+							for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
+								temp = ind[k];
+								ind[k] = move;
+								move = temp;
+							}
+							ind[k] = move;
+							
+							strcpy(ind[i + 1].key, chave_primaria);
+							ind[i + 1].byte_offset = iterator->PRR;
 						}
-						ind[k] = temp;
-						
-						strcpy(ind[i + 1].key, chave_primaria);
-						ind[i + 1].byte_offset = iterator->PRR;
-						
 						ind->tamanho++;
 					} else {
 						int k = i;
-						indexI temp;
+						indexI temp, move;
 						ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 						
-						temp = ind[k];
+						move = ind[k];
 						
-						for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
-							ind[k] = temp;
+						for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
 							temp = ind[k];
+							ind[k] = move;
+							move = temp;
 						}
-						ind[k] = temp;
+						ind[k] = move;
 						
 						strcpy(ind[i + 1].key, chave_primaria);
 						ind[i + 1].byte_offset = iterator->PRR;
@@ -337,16 +352,17 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 					}
 				} else {
 					int k = i;
-					indexI temp;
+					indexI temp, move;
 					ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 					
-					temp = ind[k];
+					move = ind[k];
 					
-					for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
-						ind[k] = temp;
+					for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
 						temp = ind[k];
+						ind[k] = move;
+						move = temp;
 					}
-					ind[k] = temp;
+					ind[k] = move;
 					
 					strcpy(ind[i + 1].key, chave_primaria);
 					ind[i + 1].byte_offset = iterator->PRR;
@@ -354,6 +370,9 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 					ind->tamanho++;
 				}
 			}
+			//atualiza arquivo
+			fseek(fp, iterator->PRR, SEEK_SET);
+			fprintf(fp, "%s\n", registro);
 			
 			//atualiza LED
 			
@@ -364,15 +383,13 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 			}
 			free(iterator);
 			fclose(fp);
-			return;
+			return ind;
 		}
 		prev = iterator;
 	}
 	//sem espaco disponível
 	
 	fp = fopen(nomeArq, "a");
-	fseek(fp, ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG, SEEK_SET);
-	fprintf(fp, "%s\n", registro);
 	
 	//atualiza indexI *ind
 	{
@@ -384,78 +401,92 @@ void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro) {
 			
 			if (strcmp(ind[meio].key, chave_primaria) == 0) {
 				printf("ERRO: Chave primaria repetida\n");
-				return;
+				return ind;
 			} else if (strcmp(ind[meio].key, chave_primaria) < 0) {
 				i = meio + 1;
 			} else {
 				j = meio - 1;
 			}
 		}
+		
 		if (i == j) {
 			if (strcmp(ind[i].key, chave_primaria) == 0) {
 				printf("ERRO: Chave primaria repetida\n");
-				return;
+				return ind;
 			} else if (strcmp(ind[i].key, chave_primaria) < 0) {
 				int k = i + 1;
-				indexI temp;
-				int tam = ind->tamanho + 1;
-				ind->tamanho++;
-				tam++;
+				indexI temp, move;
 				
-				printf("%d %s\n", ind->tamanho, ind[ind->tamanho-1].key);
-				ind = (indexI *) realloc(ind, sizeof (indexI) * tam);
-				printf("%d %s\n", ind->tamanho, ind[ind->tamanho-2].key);
-// 		CP = (indexI*)realloc(CP, sizeof(indexI)*tam_indice);
+				ind = (indexI *) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 				
-				temp = ind[k];
+				if (k > ultimoElementoIndicePrimario(ind)) {
+					strcpy(ind[i + 1].key, chave_primaria);
+					ind[i + 1].byte_offset = ind->tamanho * TAM_REG;
+					strcpy(ind[i + 2].key, FIM_IND);
+				} else {
 				
-				for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) - 1; k++) {
-					ind[k] = temp;
-					temp = ind[k];
+					move = ind[k];
+					
+					for (k = i + 2; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
+						temp = ind[k];
+						ind[k] = move;
+						move = temp;
+					}
+					ind[k] = move;
+					
+					strcpy(ind[i + 1].key, chave_primaria);
+					ind[i + 1].byte_offset = ind->tamanho * TAM_REG;
 				}
-				ind[k] = temp;
-				
-				strcpy(ind[i + 1].key, chave_primaria);
-				ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
-				
+				posicao = i + 1;
+				ind->tamanho++;
 			} else {
 				int k = i;
-				indexI temp;
+				indexI temp, move;
 				ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 				
-				temp = ind[k];
+				move = ind[k];
 				
-				for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
-					ind[k] = temp;
+				for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
 					temp = ind[k];
+					ind[k] = move;
+					move = temp;
 				}
-				ind[k] = temp;
+				ind[k] = move;
 				
-				strcpy(ind[i + 1].key, chave_primaria);
-				ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
+				strcpy(ind[i].key, chave_primaria);
+				ind[i].byte_offset = ind->tamanho * TAM_REG;
 				
+				posicao = i;
 				ind->tamanho++;
 			}
 		} else {
 			int k = i;
-			indexI temp;
+			indexI temp, move;
 			ind = (indexI*) realloc(ind, sizeof(indexI) * (ind->tamanho + 2));
 			
-			temp = ind[k];
+			move = ind[k];
 			
-			for (k = i + 2; k <= ultimoElementoIndicePrimario(ind); k++) {
-				ind[k] = temp;
+			for (k = i + 1; k <= ultimoElementoIndicePrimario(ind) + 1; k++) {
 				temp = ind[k];
+				ind[k] = move;
+				move = temp;
 			}
-			ind[k] = temp;
+			ind[k] = move;
 			
-			strcpy(ind[i + 1].key, chave_primaria);
-			ind[i + 1].byte_offset = ind[ultimoElementoIndicePrimario(ind)].byte_offset + TAM_REG;
+			strcpy(ind[i].key, chave_primaria);
+			ind[i].byte_offset = ind->tamanho * TAM_REG;
 			
+			posicao = i;
 			ind->tamanho++;
 		}
 	}
+	
+	//atualiza arquivo
+	fseek(fp, ind[posicao].byte_offset, SEEK_SET);
+	fprintf(fp, "%s\n", registro);
 	fclose(fp);
+	
+	return ind;
 }
 
 //FUNÇÕES PARA TRATAR INDICES SECUNDARIOS

@@ -27,7 +27,7 @@
 	void findRegistroPrimario(char *nomeArq, indexI* ind, char *chave_primaria);
 	void intercalaListasPrimario(char* lista1, char* lista2);
 	
-	void incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro);
+	indexI *incluirRegistroPrimario (char *nomeArq, indexI *ind, char *registro);
 
 	indexS* criaIndiceSecundario(char* nomeArq, int OP);
 	void imprimeIndiceSecundario(indexS* ind);

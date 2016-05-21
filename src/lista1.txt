@@ -16,5 +16,10 @@
 046944 Vitor Baccetti Garcia                    34  EC       A
 046946 Vitor Bruno Jacintho de Almeida          34  EC       A
 046956 Vitor Gouvea Franchi                     34  EC       A
-046961 Vitor Paulo Villarino Pinto              32  EC       A
+046961 Vitor Paulo Villarino Pinto              32  EC       C
 151234 Bernardo Nandes da Silva                 22  EM       C
+000000 Fernando Costa da Silva                  99  CC       B
+044442 Blabla blabla blabla bla                 10  CC       A
+151234 Bernardo Nandes da Silva                 22  EM       C
+000000 Fernando Costa da Silva                  99  CC       B
+044442 Blabla blabla blabla bla                 99  CC       B
