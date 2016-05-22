@@ -1,6 +1,6 @@
 IDIR =../include
 CC=gcc
-CFLAGS=-I$(IDIR) -g
+CFLAGS=-I$(IDIR) -O2 -g -Wall
 
 ODIR=../obj
 LDIR =../lib
@@ -10,7 +10,7 @@ LIBS=-lm
 _DEPS = index.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o index.o 
+_OBJ = index.o main.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
@@ -23,4 +23,4 @@ main: $(OBJ)
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~

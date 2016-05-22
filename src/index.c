@@ -88,6 +88,8 @@ tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
 	CP->vet_ind[tam_indice-1].byte_offset = 0;
 	CP->tamanho = tam_indice;
 
+	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
+
 	fclose(fp);
 
 	return CP;
@@ -165,8 +167,7 @@ int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primari
 		printf("Arquivo inexistente\n");
 		return -1;
 	}
-
-	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
+	
 	i = primeiroElementoIndicePrimario(ind);
 	j = ultimoElementoIndicePrimario(ind);
 	
@@ -205,8 +206,7 @@ int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria)
 		printf("Arquivo inexistente\n");
 		return -1;
 	}
-
-	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
+	
 	i = primeiroElementoIndicePrimario(ind);
 	j = ultimoElementoIndicePrimario(ind);
 	
@@ -215,7 +215,7 @@ int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria)
 		
 		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
 			fseek(fp, ind->vet_ind[meio].byte_offset, SEEK_SET);
-			return meio;
+			return ind->vet_ind[meio].byte_offset;
 		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
 			i = meio + 1;
 		} else {
@@ -225,7 +225,7 @@ int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria)
 	
 	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
 		fseek(fp, ind->vet_ind[i].byte_offset, SEEK_SET);
-		return i;
+		return ind->vet_ind[i].byte_offset;
 	}
 	printf("Nao existe essa chave\n");
 	return -1;
@@ -241,14 +241,10 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	//indices das listas
 	tabelaInd_Prim* CP1 = criaIndicePrimario(lista1);
 	tabelaInd_Prim* CP2 = criaIndicePrimario(lista2);
-
-	//ordena os indices
-	ordenaIndicePrimario(CP1, primeiroElementoIndicePrimario(CP1), ultimoElementoIndicePrimario(CP1));
-	ordenaIndicePrimario(CP2, primeiroElementoIndicePrimario(CP2), ultimoElementoIndicePrimario(CP2));
-
+	
 	//a partir dos indices une as listas
 	int i = 0 , j = 0;
-	while(strcmp(CP1->vet_ind[i].key, FIM_IND) != 0 && strcmp(CP2->vet_ind[j].key, FIM_IND) != 0){
+	while (strcmp(CP1->vet_ind[i].key, FIM_IND) != 0 && strcmp(CP2->vet_ind[j].key, FIM_IND) != 0) {
 		if(strcmp(CP1->vet_ind[i].key, CP2->vet_ind[j].key) < 0){
 			fprintf(saida, "%s\n", getRegistroPrimario(fp1, CP1->vet_ind[i].byte_offset));
 			i++;
@@ -285,7 +281,7 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 
 tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro) {	
 	FILE * fp = fopen(nomeArq, "a");
-	if(fp = NULL){
+	if(fp == NULL){
 		printf("O arquivo não existe\n");
 		return ind;
 	}
@@ -313,49 +309,59 @@ tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char
 	chave_primaria[31] ='\0';
 
 	//verifica se ele já existe
-	i=0;
-	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
-		if(strcmp(ind->vet_ind[i].key, chave_primaria) == 0){
+	i = primeiroElementoIndicePrimario(ind);
+	j = ultimoElementoIndicePrimario(ind);
+	while (i < j) {
+		int meio = (i + j) / 2;
+		
+		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
 			printf("Registro já existente\n");
 			fclose(fp);
 			return ind;
+		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
+			i = meio + 1;
+		} else {
+			j = meio - 1;
 		}
-		i++;
 	}
-
-	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
-	i = 0;
-	//prcura o local que deve ser adicionado
-	while(strcmp(ind->vet_ind[i].key, chave_primaria) < 0){
-		i++;
+	
+	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
+		printf("Registro já existente\n");
+		fclose(fp);
+		return ind;
 	}
-	j = i;
+	
+	//procura o local no qual se deve adiconar
+	if (i == j) {
+		if (strcmp(ind->vet_ind[i].key, FIM_IND) == 0) {
+			//j já está correto
+		} else if (strcmp(ind->vet_ind[j].key, chave_primaria) < 0) {
+			j++;
+		} else {
+			//j já está correto
+		}
+	} else {
+		//i > j
+		j = i;
+	}
+	
 	ind->tamanho++;
 	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
-	strcpy(ind->vet_ind[ind->tamanho-1].key, FIM_IND);
 
 	//passa todos do local a ser inserido para a frente
-	i =  ultimoElementoIndicePrimario(ind);
-	while(i > j){
-		AUX = ind->vet_ind[i-1];
+	for (i = ultimoElementoIndicePrimario(ind); i > j; i--){
 		ind->vet_ind[i] = ind->vet_ind[i-1];
-		i--;
 	}
+	
 	strcpy(ind->vet_ind[j].key, chave_primaria);
 	//atualiza o byte_offset do elemento inserido, como foi inserido ao final do arquivo só é necessário colocar o dele
-	long int maior = 0;
-	i=0;
-	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
-		if(ind->vet_ind[i].byte_offset >= maior){
-			maior = ind->vet_ind[i].byte_offset;
-		}
-		i++;
-	}
-	ind->vet_ind[j].byte_offset = maior + TAM_REG;
-
-	fprintf(fp, "%s\n", registro);
+	//Há ind->tamanho registros incluindo o que está sendo inserido e o final,
+	//logo há ind->tamanho registros antes dele, cada um com tamanho TAM_REG
+	ind->vet_ind[j].byte_offset = (ind->tamanho - 2) * TAM_REG;
+	
+	fprintf(fp, "%s\r\n", registro);
 	fclose(fp);
-
+	
 	return ind;
 }
 
@@ -388,43 +394,64 @@ void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
 	}
 	chave_primaria[31] ='\0';
 
-	i=0;
-	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0 && flag == 0){
-		if(strcmp(ind->vet_ind[i].key, chave_primaria) == 0){
-			flag = 1;		
+	i = primeiroElementoIndicePrimario(ind);
+	j = ultimoElementoIndicePrimario(ind);
+	flag = 0;
+	while (i < j) {
+		int meio = (i + j) / 2;
+		
+		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
+			i = j = meio;
+			flag = 1;
+			break;
+		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
+			i = meio + 1;
+		} else {
+			j = meio - 1;
 		}
-		i++;
+	}
+	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
+		flag = 1;
 	}
 	if(!flag){
 		printf("Registro inexistente\n");
 		return;
 	}
 
+	//recebe o byte no qual comeca o registro
 	i = findRegistroPrimarioArq(nf, ind, chave_primaria);
-	rewind(nf);
-	j=1;
 	//retira o registro do arquivo
-	while(i+j < ind->tamanho-1){
-		fseek(nf, ind->vet_ind[i+j].byte_offset, SEEK_SET);
+	for (; i < (ind->tamanho - 1) * TAM_REG; i += TAM_REG){
+		fseek(nf, i + TAM_REG, SEEK_SET);
 		fscanf(nf, "%[^\n]\n", string);
-		fseek(nf, ind->vet_ind[i+j-1].byte_offset, SEEK_SET);
+		fseek(nf, i, SEEK_SET);
 		fprintf(nf, "%s\n", string);
-		j++;
 	}
-	fseek(nf, ind->vet_ind[ind->tamanho].byte_offset, SEEK_SET);
 
-	//retira o registro dos indices
-	j=0;
-	while(i+j < ind->tamanho-1){
-		ind->vet_ind[i+j] = ind->vet_ind[i+j+1];
-		ind->vet_ind[i+j].byte_offset -= TAM_REG;
-		j++;
+	i = primeiroElementoIndicePrimario(ind);
+	j = ultimoElementoIndicePrimario(ind);
+	while (i < j) {
+		int meio = (i + j) / 2;
+		
+		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
+			i = j = meio;
+			break;
+		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
+			i = meio + 1;
+		} else {
+			j = meio - 1;
+		}
 	}
+	//retira o registro dos indices
+	//i contém o registro que se deseja retirar
+	for (; i < ind->tamanho - 1; i++) {
+		ind->vet_ind[i] = ind->vet_ind[i + 1];
+		ind->vet_ind[i].byte_offset -= TAM_REG;
+	}
+	
 	ind->tamanho--;
 	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
-	strcpy(ind->vet_ind[ind->tamanho-1].key, FIM_IND);
-	ind->vet_ind[ind->tamanho-1].byte_offset = 0;
-
+	
 	fclose(nf);
 	return;
 }
