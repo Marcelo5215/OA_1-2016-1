@@ -157,15 +157,16 @@ char* getRegistroPrimario(FILE* fp, long int byte_offset){
 }
 
 //procura pelo registro com determinada chave, busca binaria
-void findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria) {
+int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria) {
 	FILE *fp = fopen(nomeArq, "r");
 	char string[64];
 	int i, j;
 	if (fp == NULL) {
 		printf("Arquivo inexistente\n");
-		return;
+		return -1;
 	}
-	
+
+	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
 	i = primeiroElementoIndicePrimario(ind);
 	j = ultimoElementoIndicePrimario(ind);
 	
@@ -176,7 +177,8 @@ void findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primar
 			fseek(fp, ind->vet_ind[meio].byte_offset, SEEK_SET);
 			fscanf(fp, "%[^\n]\n", string);
 			printf("%s\n", string);
-			return;
+			fclose(fp);
+			return meio;
 		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
 			i = meio + 1;
 		} else {
@@ -188,10 +190,45 @@ void findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primar
 		fseek(fp, ind->vet_ind[i].byte_offset, SEEK_SET);
 		fscanf(fp, "%[^\n]\n", string);
 		printf("%s\n", string);
-		return;
+		fclose(fp);
+		return i;
 	}
 	printf("Nao existe essa chave\n");
-	return;
+	fclose(fp);
+	return -1;
+}
+
+int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria){
+	char string[64];
+	int i, j;
+	if (fp == NULL) {
+		printf("Arquivo inexistente\n");
+		return -1;
+	}
+
+	ordenaIndicePrimario(ind, primeiroElementoIndicePrimario(ind), ultimoElementoIndicePrimario(ind));
+	i = primeiroElementoIndicePrimario(ind);
+	j = ultimoElementoIndicePrimario(ind);
+	
+	while (i < j) {
+		int meio = (i + j) / 2;
+		
+		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
+			fseek(fp, ind->vet_ind[meio].byte_offset, SEEK_SET);
+			return meio;
+		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
+			i = meio + 1;
+		} else {
+			j = meio - 1;
+		}
+	}
+	
+	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
+		fseek(fp, ind->vet_ind[i].byte_offset, SEEK_SET);
+		return i;
+	}
+	printf("Nao existe essa chave\n");
+	return -1;
 }
 
 // cria um arquivo com as duas listas intercaladas
@@ -246,18 +283,21 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	free(CP2);
 }
 
-tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim* ind, char *registro) {
-	
+tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro) {	
 	FILE * fp = fopen(nomeArq, "a");
+	if(fp = NULL){
+		printf("O arquivo não existe\n");
+		return ind;
+	}
 	int i = 0, j = 0;
 	indexI AUX, temp;
 	char chave_primaria[31];
 
+	//monta a chave primaria do registro novo
 	for (i = 0; i < 31; ++i){
 		chave_primaria[i] = ' ';
 	}
 	chave_primaria[31] ='\0';
-	//monta a chave primaria do registro
 	i=0; j=0;
 	while(i < 31){
 		if(registro[j] != ' '){
@@ -272,6 +312,7 @@ tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim* ind, cha
 	}
 	chave_primaria[31] ='\0';
 
+	//verifica se ele já existe
 	i=0;
 	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
 		if(strcmp(ind->vet_ind[i].key, chave_primaria) == 0){
@@ -318,6 +359,75 @@ tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim* ind, cha
 	return ind;
 }
 
+void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
+	FILE *nf = fopen(nomeArq, "r+");
+	if(nf == NULL){
+		printf("O arquivo não existe\n");
+		return;
+	}
+
+	int i, j, flag = 0;
+	char chave_primaria[31], string[64];
+
+	//monta a chave primaria do registro a ser excluido
+	for (i = 0; i < 31; ++i){
+		chave_primaria[i] = ' ';
+	}
+	chave_primaria[31] ='\0';
+	i=0; j=0;
+	while(i < 31){
+		if(registro[j] != ' '){
+			chave_primaria[i] = registro[j];
+			i++; j++;
+		}
+		else if(registro[j] == ' ' && registro[j+1] == ' '){
+			break;
+		}
+		else
+			j++;
+	}
+	chave_primaria[31] ='\0';
+
+	i=0;
+	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0 && flag == 0){
+		if(strcmp(ind->vet_ind[i].key, chave_primaria) == 0){
+			flag = 1;		
+		}
+		i++;
+	}
+	if(!flag){
+		printf("Registro inexistente\n");
+		return;
+	}
+
+	i = findRegistroPrimarioArq(nf, ind, chave_primaria);
+	rewind(nf);
+	j=1;
+	//retira o registro do arquivo
+	while(i+j < ind->tamanho-1){
+		fseek(nf, ind->vet_ind[i+j].byte_offset, SEEK_SET);
+		fscanf(nf, "%[^\n]\n", string);
+		fseek(nf, ind->vet_ind[i+j-1].byte_offset, SEEK_SET);
+		fprintf(nf, "%s\n", string);
+		j++;
+	}
+	fseek(nf, ind->vet_ind[ind->tamanho].byte_offset, SEEK_SET);
+
+	//retira o registro dos indices
+	j=0;
+	while(i+j < ind->tamanho-1){
+		ind->vet_ind[i+j] = ind->vet_ind[i+j+1];
+		ind->vet_ind[i+j].byte_offset -= TAM_REG;
+		j++;
+	}
+	ind->tamanho--;
+	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
+	strcpy(ind->vet_ind[ind->tamanho-1].key, FIM_IND);
+	ind->vet_ind[ind->tamanho-1].byte_offset = 0;
+
+	fclose(nf);
+	return;
+}
 
 indexS* criaIndiceSecundario(char* nomeArq, int OP){
 	FILE *fp = fopen(nomeArq, "r");

@@ -4,8 +4,18 @@
 #include "index.h"
 
 int main(int agrc, char** argv){
+	char *lista1 = "lista1.txt";
+
+	tabelaInd_Prim* IP = criaIndicePrimario(lista1);
+
+	imprimeIndicePrimario(IP);
+	retiraRegistroPrimario(lista1, IP, "041881 Ana Luisa Costa Miguel                   34  CC       A");
+	imprimeIndicePrimario(IP);
+
+	free(IP);
+
 	
-	printf("\tlista 2:\n");
+	/*printf("\tlista 2:\n");
 	tabelaInd_Prim* CP = criaIndicePrimario((char*)"lista2.txt");
 	imprimeIndicePrimario(CP);
 	ordenaIndicePrimario(CP, primeiroElementoIndicePrimario(CP), ultimoElementoIndicePrimario(CP));
@@ -38,7 +48,7 @@ int main(int agrc, char** argv){
 	indexS* IS = criaIndiceSecundario((char*)"lista1.txt", 0);
 	imprimeIndiceSecundario(IS);
 
-	limpaIndiceSecundario(IS);
+	limpaIndiceSecundario(IS);*/
 
 
 	return 0;

@@ -25,9 +25,10 @@
 	char* getRegistroPrimario(FILE* fp, long int byte_offset);
 	void imprimeIndicePrimarioArq(tabelaInd_Prim* ind, char* nomeArq);
 	void intercalaListasPrimario(char* lista1, char* lista2);
-	void findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria);
+	int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria);
 
 	tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim *ind, char *registro);
+	void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro);
 
 	indexS* criaIndiceSecundario(char* nomeArq, int OP);
 	void imprimeIndiceSecundario(indexS* ind);
