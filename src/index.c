@@ -280,7 +280,7 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 }
 
 tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro) {	
-	FILE * fp = fopen(nomeArq, "a");
+	FILE * fp = fopen(nomeArq, "r+");
 	if(fp == NULL){
 		printf("O arquivo não existe\n");
 		return ind;
@@ -345,29 +345,49 @@ tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char
 		j = i;
 	}
 	
-	ind->tamanho++;
-	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
+	if (ind->vet_ind[0].key[0] == '*') { //se há algo a se retirar
 
-	//passa todos do local a ser inserido para a frente
-	for (i = ultimoElementoIndicePrimario(ind); i > j; i--){
-		ind->vet_ind[i] = ind->vet_ind[i-1];
+		int byte = ind->vet_ind[0].byte_offset;
+		
+		//passa todos abaixo do local a ser inserido para o começo
+		for (i = primeiroElementoIndicePrimario(ind); i < j - 1; i++){
+			ind->vet_ind[i] = ind->vet_ind[i + 1];
+		}
+		
+		strcpy(ind->vet_ind[j - 1].key, chave_primaria);
+		ind->vet_ind[j - 1].byte_offset = byte;
+	
+		fseek(fp, byte, SEEK_SET);
+		fprintf(fp, "%s", registro);
+	} else {
+		
+		ind->tamanho++;
+		ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
+
+		//passa todos do local a ser inserido para a frente
+		for (i = ultimoElementoIndicePrimario(ind); i > j; i--){
+			ind->vet_ind[i] = ind->vet_ind[i-1];
+		}
+		
+		strcpy(ind->vet_ind[j].key, chave_primaria);
+		//atualiza o byte_offset do elemento inserido, como foi inserido ao final do arquivo só é necessário colocar o dele
+		//Há ind->tamanho registros incluindo o que está sendo inserido e o final,
+		//logo há ind->tamanho registros antes dele, cada um com tamanho TAM_REG
+		ind->vet_ind[j].byte_offset = (ind->tamanho - 2) * TAM_REG;
+		
+		fseek(fp, 0, SEEK_END);
+		fprintf(fp, "%s\r\n", registro);
 	}
-	
-	strcpy(ind->vet_ind[j].key, chave_primaria);
-	//atualiza o byte_offset do elemento inserido, como foi inserido ao final do arquivo só é necessário colocar o dele
-	//Há ind->tamanho registros incluindo o que está sendo inserido e o final,
-	//logo há ind->tamanho registros antes dele, cada um com tamanho TAM_REG
-	ind->vet_ind[j].byte_offset = (ind->tamanho - 2) * TAM_REG;
-	
-	fprintf(fp, "%s\r\n", registro);
 	fclose(fp);
 	
 	return ind;
 }
 
 void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
-	FILE *nf = fopen(nomeArq, "r+");
-	if(nf == NULL){
+	FILE *fp = fopen(nomeArq, "r+");
+	indexI temp;
+	
+	if(fp == NULL){
 		printf("O arquivo não existe\n");
 		return;
 	}
@@ -419,15 +439,12 @@ void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
 	}
 
 	//recebe o byte no qual comeca o registro
-	i = findRegistroPrimarioArq(nf, ind, chave_primaria);
-	//retira o registro do arquivo
-	for (; i < (ind->tamanho - 1) * TAM_REG; i += TAM_REG){
-		fseek(nf, i + TAM_REG, SEEK_SET);
-		fscanf(nf, "%[^\n]\n", string);
-		fseek(nf, i, SEEK_SET);
-		fprintf(nf, "%s\n", string);
-	}
-
+	i = findRegistroPrimarioArq(fp, ind, chave_primaria);
+	strcpy(string, registro);
+	string[0] = '*';
+	fseek(fp, i, SEEK_SET);
+	fprintf(fp, "%s", string);
+	
 	i = primeiroElementoIndicePrimario(ind);
 	j = ultimoElementoIndicePrimario(ind);
 	while (i < j) {
@@ -444,15 +461,14 @@ void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
 	}
 	//retira o registro dos indices
 	//i contém o registro que se deseja retirar
-	for (; i < ind->tamanho - 1; i++) {
-		ind->vet_ind[i] = ind->vet_ind[i + 1];
-		ind->vet_ind[i].byte_offset -= TAM_REG;
+	strcpy(ind->vet_ind[i].key, string);
+	temp = ind->vet_ind[i];
+	for (; i > 0; i--) {
+		ind->vet_ind[i] = ind->vet_ind[i - 1];
 	}
+	ind->vet_ind[i] = temp;
 	
-	ind->tamanho--;
-	ind->vet_ind = (indexI *) realloc(ind->vet_ind, sizeof(indexI) * ind->tamanho);
-	
-	fclose(nf);
+	fclose(fp);
 	return;
 }
 
