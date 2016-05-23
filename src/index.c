@@ -514,13 +514,24 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 			Lab_count++;
 		}
 		else{//monta os ponteiros das chavesP
-			i= IS->CS[i-1].pont;
-			while (IS->Lab[i].pont != -1 ) {
-				i = IS->Lab[i].pont;
+			int anterior = -1, atual;
+			int temp;
+			
+			atual = IS->CS[i - 1].pont;
+			while (atual != -1 && strcmp(IS->Lab[atual].chave, chave) < 0) {
+				anterior = atual;
+				atual = IS->Lab[atual].pont;
 			}
-			IS->Lab[i].pont = Lab_count-1;
-			IS->Lab[Lab_count-1].pont = -1;
-			Lab_count++; 
+			
+			if (anterior == -1) {
+				IS->Lab[Lab_count - 1].pont = IS->CS[i - 1].pont;
+				IS->CS[i - 1].pont = Lab_count - 1;
+			} else {
+			
+				IS->Lab[Lab_count-1].pont = atual;
+				IS->Lab[anterior].pont = Lab_count - 1;
+			}
+			Lab_count++;
 		}	
 
 		//aloca mais espaço para o proximo

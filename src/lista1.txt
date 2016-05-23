@@ -1,7 +1,6 @@
 024312 Leonardo Nunes de Souza                  32  EC       A
 031272 Andreza Pollyana da Silva                32  EC       A
 035830 Rogerio Augusto de Castro Neves          37  EC       A
-041881 Ana Luisa Costa Miguel                   34  CC       A
 042290 Bruno Filipe Milare de Macedo            34  EC       A
 042780 Daniel Schowantz Silva                   34  EC       A
 042865 Danilo Silva Marshall                    35  CC       A
@@ -17,3 +16,7 @@
 046946 Vitor Bruno Jacintho de Almeida          34  EC       A
 046956 Vitor Gouvea Franchi                     34  EC       A
 046961 Vitor Paulo Villarino Pinto              32  EC       A
+046961 Vitor Paulo Villarino Pinto              32  EC       A
+151234 Bernardo Nandes da Silva                 22  EM       C
+000000 Fernando Costa da Silva                  99  CC       B
+044442 Blabla blabla blabla bla                 99  CC       B
