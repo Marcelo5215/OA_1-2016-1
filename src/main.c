@@ -9,9 +9,9 @@ int main(int agrc, char** argv){
 	tabelaInd_Prim* IP = criaIndicePrimario(lista1);
 
 	imprimeIndicePrimario(IP);
-	printf("1\n");
+	printf("\t1\n");
 	retiraRegistroPrimario(lista1, IP, "041881 Ana Luisa Costa Miguel                   34  CC       A");
-	printf("2\n");
+	printf("\t2\n");
 	imprimeIndicePrimario(IP);
 	free(IP);
 	
@@ -23,6 +23,15 @@ int main(int agrc, char** argv){
 	
 	printf("\tlista 1:\n");
 	CP = criaIndicePrimario((char*)"lista1.txt");
+	imprimeIndicePrimario(CP);
+	
+	printf("\tPrimeira atualizacao, com mudanca de chave primaria\n");
+	atualizaRegistroPrimario("lista1.txt", CP,
+		"024312 Leonardo Nunes
+	printf("\tSegunda atualizacao, sem mudanca de chave primaria\n");
+	atualizaRegistroPrimario("lista1.txt", CP,
+		"043217 Erikita Regina Campos de Almeida         34  CC       A",
+		"043217 Erikita Regina Campos de Almeida         34  EC       A");
 	imprimeIndicePrimario(CP);
 	
 	CP = incluirRegistroPrimario("lista1.txt", CP,

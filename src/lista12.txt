@@ -1,6 +1,7 @@
 000000 Fernando Costa da Silva                  99  CC       B
 015511 Angelo Luiz Rocatto Junior               34  CC       B
 024312 Leonardo Nunes de Souza                  34  CC       B
+024312 Leonardo Tanto Faz Abcd                  32  EC       A
 031147 Anderson Silva Bezerra                   34  EC       B
 031200 Andre Luiz Silva Bezerra                 34  CC       B
 031272 Andreza Pollyana da Silva                32  EC       A
@@ -13,7 +14,7 @@
 042728 Daniel Alonso Negrini                    34  EC       B
 042780 Daniel Schowantz Silva                   34  EM       B
 042865 Danilo Silva Marshall                    35  CC       A
-043217 Erikita Regina Campos de Almeida         34  CC       A
+043217 Erikita Regina Campos de Almeida         34  EC       A
 043341 Fabricio Nallin Violin                   34  EC       A
 043648 Franz Glauber Vanderlinde                38  EC       B
 044072 Igor Ribeiro de Assis                    34  CC       B
@@ -36,4 +37,3 @@
 046946 Vitor Bruno Jacintho de Almeida          34  EC       A
 046956 Vitor Gouvea Franchi                     34  EC       A
 046961 Vitor Paulo Villarino Pinto              34  CC       B
-151234 Bernardo Nandes da Silva                 22  EM       C

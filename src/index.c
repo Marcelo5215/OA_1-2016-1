@@ -479,6 +479,65 @@ void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
 	return;
 }
 
+void atualizaRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *regi_antigo, char *regi_novo) {
+	char chave_antiga[31];
+	char chave_nova[31];
+	int i, j;
+	
+	for (i = 0; i < 31; ++i){
+		chave_antiga[i] = ' ';
+	}
+	chave_antiga[30] ='\0';
+	i=0; j=0;
+	while(i < 31){
+		if(regi_antigo[j] != ' '){
+			chave_antiga[i] = regi_antigo[j];
+			i++; j++;
+		}
+		else if(regi_antigo[j] == ' ' && regi_antigo[j+1] == ' '){
+			break;
+		}
+		else
+			j++;
+	}
+	chave_antiga[30] ='\0';
+	
+	for (i = 0; i < 31; ++i){
+		chave_nova[i] = ' ';
+	}
+	chave_nova[30] ='\0';
+	i=0; j=0;
+	while(i < 31){
+		if(regi_novo[j] != ' '){
+			chave_nova[i] = regi_novo[j];
+			i++; j++;
+		}
+		else if(regi_novo[j] == ' ' && regi_novo[j+1] == ' '){
+			break;
+		}
+		else
+			j++;
+	}
+	chave_nova[30] ='\0';
+	
+	if (strcmp(chave_antiga, chave_nova) == 0) {
+		//soh atualiza o arquivo
+		FILE *fp = fopen(nomeArq, "r+");
+		int byte = findRegistroPrimarioArq(fp, ind, chave_antiga);
+		
+		fseek(fp, byte, SEEK_SET);
+		fprintf(fp, "%s", regi_novo);
+		fclose(fp);
+	} else {
+		//ao se retirar, insere-se um * no arquivo e no índice,
+		//e move-se ao topo do índice o elemento deletado
+		retiraRegistroPrimario(nomeArq, ind, regi_antigo);
+		//ao se inserir, caso haja um elemento deletado
+		//remove-se o primeiro que será regi_antigo
+		incluirRegistroPrimario(nomeArq, ind, regi_novo);
+	}
+}
+
 indexS* criaIndiceSecundario(char* nomeArq, int OP){
 	FILE *fp = fopen(nomeArq, "r");
 	indexS* IS = (indexS*)malloc(sizeof(indexS));
