@@ -9,10 +9,11 @@ int main(int agrc, char** argv){
 	tabelaInd_Prim* IP = criaIndicePrimario(lista1);
 
 	imprimeIndicePrimario(IP);
+	printf("1\n");
 	retiraRegistroPrimario(lista1, IP, "041881 Ana Luisa Costa Miguel                   34  CC       A");
+	printf("2\n");
 	imprimeIndicePrimario(IP);
 	free(IP);
-
 	
 	printf("\tlista 2:\n");
 	tabelaInd_Prim* CP = criaIndicePrimario((char*)"lista2.txt");
@@ -25,8 +26,6 @@ int main(int agrc, char** argv){
 	imprimeIndicePrimario(CP);
 	
 	CP = incluirRegistroPrimario("lista1.txt", CP,
-		"151234 Bernardo Nandes da Silva                 22  EM       C");
-	CP = incluirRegistroPrimario("lista1.txt", CP,
 		"000000 Fernando Costa da Silva                  99  CC       B");
 	CP = incluirRegistroPrimario("lista1.txt", CP,
 		"044442 Blabla blabla blabla bla                 99  CC       B");
@@ -34,14 +33,17 @@ int main(int agrc, char** argv){
 	printf("\tApos mais elementos:\n");
 	imprimeIndicePrimario(CP);
 	imprimeIndicePrimarioArq(CP, (char*)"indicelista1.ind");
-	free(CP);
 
 	intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
 
 	indexS* IS = criaIndiceSecundario((char*)"lista1.txt", 0);
 	imprimeIndiceSecundario(IS);
 
+	incluirRegistroSecundario(CP,(char*)"lista1.txt" , IS, "151234 Bernardo Nandes da Silva                 22  EM       C", 1);
+	imprimeIndiceSecundario(IS);
+
 	limpaIndiceSecundario(IS);
+	free(CP);
 
 
 	return 0;
