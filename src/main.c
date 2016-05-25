@@ -147,7 +147,7 @@ int main(int agrc, char** argv){
 					break;
 				}
 				printf("Primeiro registro solitado sera o a ser atualizado, e o segundo oque.\n\n");
-				atualizarRegistro(nomeArq, IP, IS, leRegistro(), leRegistro());
+				atualizarRegistro(nomeArq, IP, IS, leRegistro(), leRegistro(), 0);
 				break;
 
 			case 6:

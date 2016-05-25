@@ -38,7 +38,7 @@ void retirarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *registro)
 void atualizarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *regi_antigo, char *regi_novo);
 void incluirRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP);
 void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP);
-
+void atualizarRegistroSecundario(char *nomeArq, indexS *IS, char *regi_antigo, char *regi_novo, int OP);
 
 int primeiroElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, incluindo FIM_IND que eh o ind->tamanho - 1
@@ -738,12 +738,30 @@ void incluirRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int O
 		ind->Lab[ind->tamanhoL-1].pont = -1;
 	}
 	else{//monta os ponteiros das chavesP
-		i= ind->CS[i-1].pont;
+		
+		int anterior = -1, atual;
+			
+			atual = ind->CS[i - 1].pont;
+			while (atual != -1 && strcmp(ind->Lab[atual].chave, chave) < 0) {
+				anterior = atual;
+				atual = ind->Lab[atual].pont;
+			}
+			
+			if (anterior == -1) {
+				ind->Lab[ind->tamanhoL - 1].pont = ind->CS[i - 1].pont;
+				ind->CS[i - 1].pont = ind->tamanhoL - 1;
+			} else {
+			
+				ind->Lab[ind->tamanhoL - 1].pont = atual;
+				ind->Lab[anterior].pont = ind->tamanhoL - 1;
+			}
+		
+		/*i= ind->CS[i-1].pont;
 		while (ind->Lab[i].pont != -1 ) {
 			i = ind->Lab[i].pont;
 		}
-		ind->Lab[i].pont = ind->tamanhoL-1;
-		ind->Lab[ind->tamanhoL-1].pont = -1;
+		ind->Lab[i].pont = ind->tamanhoL - 1;
+		ind->Lab[ind->tamanhoL-1].pont = -1;*/
 	}	
 	strcpy(ind->CS[ind->tamanhoC].chave, FIM_IND);
 	strcpy(ind->Lab[ind->tamanhoL].chave, FIM_IND);
@@ -813,8 +831,9 @@ void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int O
 			//copia os valores próximos para o seu lugar , dos ponteiros tambem
 			j = 0;
 			while(strcmp(ind->Lab[i+j].chave, FIM_IND) != 0){
-				ind->Lab[i+j].pont = ind->Lab[i+j+1].pont;
-				strcpy(ind->Lab[i+j].chave, ind->Lab[i+j+1].chave);
+				/*ind->Lab[i+j].pont = ind->Lab[i+j+1].pont;
+				strcpy(ind->Lab[i+j].chave, ind->Lab[i+j+1].chave);*/
+				ind->Lab[i+j] = ind->Lab[i+j+1];
 				j++;
 			}
 			//muda os ponteiros
@@ -823,14 +842,14 @@ void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int O
 				if(ind->Lab[j].pont > i && ind->Lab[j].pont != -1){
 					ind->Lab[j].pont--;
 				}
-				if(ind->CS[j].pont == i) {
-					ind->CS[j].pont = ind->Lab[ind->CS[j].pont].pont;
+				if(ind->Lab[j].pont == i) {
+					ind->Lab[j].pont = ind->Lab[ind->Lab[j].pont].pont;
 				}
 				j++;
 			}
 
 			//realoca para um tamanho menor
-			ind->Lab = (labels*)realloc(ind->Lab, sizeof(labels)*(ind->tamanhoL));
+			ind->Lab = (labels *) realloc(ind->Lab, sizeof(labels)*(ind->tamanhoL));
 			ind->tamanhoL--;
 			strcpy(ind->Lab[ind->tamanhoL].chave, FIM_IND);
 			return;
@@ -839,6 +858,45 @@ void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int O
 
 	printf("Registro inexistente.\n");
 	getchar();
+}
+
+void atualizarRegistroSecundario(char *nomeArq, indexS *IS, char *regi_antigo, char *regi_novo, int OP) {
+	
+	char chaveSe_antigo[3], chaveSe_novo[3];
+	
+	switch(OP){
+		case 0:
+			chaveSe_antigo[0] = regi_antigo[52];
+			chaveSe_antigo[1] = regi_antigo[53];
+			chaveSe_antigo[2] = '\0';
+			break;
+		case 1:
+			chaveSe_antigo[0] = regi_antigo[61];
+			chaveSe_antigo[1] = '\0';
+			break;
+		default:
+			printf("Opção inválida.\n");
+			return ;
+	}
+	switch(OP){
+		case 0:
+			chaveSe_novo[0] = regi_novo[52];
+			chaveSe_novo[1] = regi_novo[53];
+			chaveSe_novo[2] = '\0';
+			break;
+		case 1:
+			chaveSe_novo[0] = regi_novo[61];
+			chaveSe_novo[1] = '\0';
+			break;
+		default:
+			printf("Opção inválida.\n");
+			return ;
+	}
+	
+	if (strcmp(chaveSe_antigo, chaveSe_novo) != 0) {
+		retirarRegistroSecundario(nomeArq, IS, regi_antigo, OP);
+		incluirRegistroSecundario(nomeArq, IS, regi_novo, OP);
+	}
 }
 
 void limpaIndiceSecundario(indexS *ind){
@@ -890,7 +948,7 @@ void retirarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regist
 	retirarRegistroSecundario(nomeArq, IS, registro, OP);
 }
 
-void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo) {
+void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo, int OP) {
 	char chave[31];
 	int i, j;
 	//monta a crave primaria, para a verificacao de regi_antigo
@@ -917,7 +975,7 @@ void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi
 		return;
 	}
 	atualizarRegistroPrimario(nomeArq, IP, regi_antigo, regi_novo);
-// 	atualizarRegistroSecundario(nomeArq, IS, regi_antigo, regi_novo);
+	atualizarRegistroSecundario(nomeArq, IS, regi_antigo, regi_novo, OP);
 }
 
 #undef FIM_IND

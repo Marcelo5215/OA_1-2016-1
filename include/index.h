@@ -33,7 +33,7 @@
 	
 	void incluirRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP);
 	void retirarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP);
-	void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo);
+	void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo, int OP);
 
 	indexS *criaIndiceSecundario(char *nomeArq, int OP);
 	void imprimeIndiceSecundario(indexS *ind);
