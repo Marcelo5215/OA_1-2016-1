@@ -16,16 +16,16 @@ PROGRAMA DE TESTE, CUIDADO DURANTE A UTILIZACAO.
 void menu(){
 	system("clear");
 	printf("*****************************************************\n");
-	printf("*  1 - Cria Indice Primario.         				*\n");
-	printf("*  2 - Imprime Indice Primario.      				*\n");
-	printf("*  3 - Insere Registro.			       				*\n");
-	printf("*  4 - Retira Registro.       						*\n");
-	printf("*  5 - Atualiza Indice Primario.     				*\n");
-	printf("*  6 - Intercala Listas.             				*\n");
-	printf("*  7 - Cria Indice Secundario             			*\n");
-	printf("*  8 - Imprime Indice Secundario           			*\n");
-	printf("*  9 - Imprime Indice Primario em um arquivo 		*\n");
-	printf("*  99 - Sair          	                        	*\n");
+	printf("*  1 - Cria Indice Primario.         				\n");
+	printf("*  2 - Imprime Indice Primario.      				\n");
+	printf("*  3 - Insere Registro.			       				\n");
+	printf("*  4 - Retira Registro.       						\n");
+	printf("*  5 - Atualiza Indice Primario.     				\n");
+	printf("*  6 - Intercala Listas.             				\n");
+	printf("*  7 - Cria Indice Secundario             			\n");
+	printf("*  8 - Imprime Indice Secundario           			\n");
+	printf("*  9 - Imprime Indice Primario em um arquivo 		\n");
+	printf("*  99 - Sair          	                        	\n");
 	printf("*****************************************************\n");
 	printf("Opcao:   ");
 }
@@ -92,11 +92,26 @@ int main(int agrc, char** argv){
 				break;
 
 			case 2:
+				if(IP == NULL){
+					printf("Crie um indice primario");
+					getchar();
+					break;
+				}
 				imprimeIndicePrimario(IP);
 				getchar();
 				break;
 
-			case 3:				
+			case 3:	
+				if(IS == NULL){
+					printf("Crie um indice secundario");
+					getchar();
+					break;
+				}
+				if(IP == NULL){
+					printf("Crie um indice primario");
+					getchar();
+					break;
+				}			
 				printf("Opcoes: Curso(0), Turma(1)\n");
 				scanf("%d", &op);
 				getchar();
@@ -104,7 +119,17 @@ int main(int agrc, char** argv){
 				getchar();
 				break;
 
-			case 4:
+			case 4:	
+				if(IS == NULL){
+					printf("Crie um indice secundario");
+					getchar();
+					break;
+				}
+				if(IP == NULL){
+					printf("Crie um indice primario");
+					getchar();
+					break;
+				}
 				printf("Opcoes: Curso(0), Turma(1)\n");
 				scanf("%d", &op);
 				getchar();
@@ -113,6 +138,14 @@ int main(int agrc, char** argv){
 				break;
 
 			case 5:
+				if(IS == NULL){
+					printf("Crie um indice secundario");
+					break;
+				}
+				if(IP == NULL){
+					printf("Crie um indice primario");
+					break;
+				}
 				printf("Primeiro registro solitado sera o a ser atualizado, e o segundo oque.\n\n");
 				atualizarRegistro(nomeArq, IP, IS, leRegistro(), leRegistro());
 				break;
@@ -134,11 +167,21 @@ int main(int agrc, char** argv){
 				break;
 
 			case 8:
+				if(IS == NULL){
+					printf("Crie um indice secundario");
+					getchar();
+					break;
+				}
 				imprimeIndiceSecundario(IS);
 				getchar();
 				break;
 
-			case 9:				
+			case 9:
+				if(IP == NULL){
+					printf("Crie um indice primario");
+					getchar();
+					break;
+				}				
 				imprimeIndicePrimarioArq(IP, "indiceLista.ind");
 				getchar();
 				break;

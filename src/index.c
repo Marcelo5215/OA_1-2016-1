@@ -675,7 +675,6 @@ void imprimeIndiceSecundario(indexS *ind){
 
 //incui registro secundario no indice secundario e caso nao exista adiciona no indice primario e no arquivo
 void incluirRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP){
-
 	char chaveSe[31], chave[31];
 	int i = 0, j, flag = 0;
 
@@ -849,7 +848,7 @@ void limpaIndiceSecundario(indexS *ind){
 }
 
 void incluirRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP) {
-	if(strlen(registro) < 63){
+	if(strlen(registro) < 62){
 		printf("Registro de tamanho inadequado.\n");
 		return;
 	}
