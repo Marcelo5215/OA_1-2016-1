@@ -26,8 +26,8 @@ int main(int agrc, char** argv){
 	imprimeIndicePrimario(CP);
 	
 	printf("\tPrimeira atualizacao, com mudanca de chave primaria\n");
-	atualizaRegistroPrimario("lista1.txt", CP,
-		"024312 Leonardo Nunes
+	/*atualizaRegistroPrimario("lista1.txt", CP,
+		"024312 Leonardo Nunes*/
 	printf("\tSegunda atualizacao, sem mudanca de chave primaria\n");
 	atualizaRegistroPrimario("lista1.txt", CP,
 		"043217 Erikita Regina Campos de Almeida         34  CC       A",
@@ -48,7 +48,10 @@ int main(int agrc, char** argv){
 	indexS* IS = criaIndiceSecundario((char*)"lista1.txt", 0);
 	imprimeIndiceSecundario(IS);
 
-	incluirRegistroSecundario(CP,(char*)"lista1.txt" , IS, "151234 Bernardo Nandes da Silva                 22  EM       C", 1);
+	incluirRegistroSecundario(CP,(char*)"lista1.txt" , IS, "151234 Bernardo Nandes da Silva                 22  EM       C", 0);
+	imprimeIndiceSecundario(IS);
+
+	retirarRegistroSecundario(CP,(char*)"lista1.txt" , IS, "031272 Andreza Pollyana da Silva                32  EC       A", 0);
 	imprimeIndiceSecundario(IS);
 
 	limpaIndiceSecundario(IS);

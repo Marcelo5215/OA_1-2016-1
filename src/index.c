@@ -549,6 +549,10 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 	int i, j, Lab_count = 1, CS_count = 1;
 	int flag = 0;
 	while(fscanf(fp, "%[^\n]\n", string) > 0){
+		if(string[0] == '*'){
+			j++;
+			continue;
+		}
 		for (i = 0; i < 31; ++i){
 			chave[i] = ' ';
 		}
@@ -705,14 +709,14 @@ void incluirRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 			break;
 		default:
 			printf("Opção inválida.\n");
-			return NULL;
+			return ;
 	}
 	
 	//atribui a nova chave secundaria e sua respectiva chave primaria
-	strcpy(ind->Lab[ind->tamanhoL-2].chave, chave);
+	strcpy(ind->Lab[ind->tamanhoL-1].chave, chave);
 	flag = 0;
 	//verifica se ja existe tal chave Secundaria
-	for(i=0; i < ind->tamanhoC - 1 && flag < 1; i++){
+	for(i=0; i < ind->tamanhoC  && flag < 1; i++){
 		if(strcmp(ind->CS[i].chave, chaveSe) == 0){
 			flag = 1;
 		}
@@ -722,20 +726,110 @@ void incluirRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 		ind->CS = (labels*)realloc(ind->CS, sizeof(labels)*(ind->tamanhoC+1));
 		strcpy(ind->CS[ind->tamanhoC-1].chave, chaveSe);
 		ind->CS[ind->tamanhoC-1].pont = ind->tamanhoL-1;
-		ind->Lab[ind->tamanhoC-1].pont = -1;
+		ind->Lab[ind->tamanhoL-1].pont = -1;
 	}
 	else{//monta os ponteiros das chavesP
 		i= ind->CS[i-1].pont;
 		while (ind->Lab[i].pont != -1 ) {
 			i = ind->Lab[i].pont;
 		}
-		ind->Lab[i].pont = ind->tamanhoL-2;
-		ind->Lab[ind->tamanhoL-2].pont = -1;
+		ind->Lab[i].pont = ind->tamanhoL-1;
+		ind->Lab[ind->tamanhoL-1].pont = -1;
 	}	
-	strcpy(ind->CS[ind->tamanhoC-1].chave, FIM_IND);
-	strcpy(ind->Lab[ind->tamanhoL-1].chave, FIM_IND);
+	strcpy(ind->CS[ind->tamanhoC].chave, FIM_IND);
+	strcpy(ind->Lab[ind->tamanhoL].chave, FIM_IND);
 
 	return;
+}
+
+void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, char *registro, int OP){
+	char chave[31], chaveSe[31];
+	int i = 0, j, k=0;
+
+	for (i = 0; i < 31; ++i){
+		chave[i] = ' ';
+	}
+	chave[30] ='\0';
+	//adquiri e concatena os campos para fazer a chave primaria
+	i=0; j=0;
+	while(i < 31){
+		if(registro[j] != ' '){
+			chave[i] = registro[j];
+			i++; j++;
+		}
+		else if(registro[j] == ' ' && registro[j+1] == ' '){
+			break;
+		}
+		else
+			j++;
+	}
+	chave[30] ='\0';
+
+	switch(OP){
+		case 0:
+			chaveSe[0] = registro[52];
+			chaveSe[1] = registro[53];
+			chaveSe[2] = '\0';
+			break;
+		case 1:
+			chaveSe[0] = registro[61];
+			chaveSe[1] = '\0';
+			break;
+		default:
+			printf("Opção inválida.\n");
+			return ;
+	}
+
+	//realiza a remocao no local apropriado (i)
+	for(i = 0; i < ind->tamanhoL ; i++){
+		if(strcmp(ind->Lab[i].chave, chave) == 0){
+			retiraRegistroPrimario(nomeArq, IP, registro);
+
+			//muda o ponteiro do elemento anterior e do proximo na sublista do registro retirado
+			j=0;
+			while(j < ind->tamanhoC){
+				if(ind->CS[j].pont > i){
+					ind->CS[j].pont--;
+				}
+				if(strcmp(ind->CS[j].chave, chaveSe) == 0){
+					for(k = ind->CS[j].pont; ind->Lab[k].pont != -1; k = ind->Lab[k].pont){
+						if(ind->Lab[k].pont == i){
+							ind->Lab[k].pont = ind->Lab[ind->Lab[k].pont].pont;
+						}
+					}
+				}
+				j++;
+			}
+
+			//copia os valores próximos para o seu lugar , dos ponteiros tambem
+			j = 0;
+			while(strcmp(ind->Lab[i+j].chave, FIM_IND) != 0){
+				ind->Lab[i+j].pont = ind->Lab[i+j+1].pont;
+				strcpy(ind->Lab[i+j].chave, ind->Lab[i+j+1].chave);
+				j++;
+			}
+			//muda os ponteiros
+			j = 0;
+			while(j < ind->tamanhoL){
+				if(ind->Lab[j].pont > i && ind->Lab[j].pont != -1){
+					ind->Lab[j].pont--;
+				}
+				if(ind->CS[j].pont == i){
+					ind->CS[j].pont = ind->Lab[ind->CS[j].pont].pont;
+				}
+				j++;
+			}
+
+			//realoca para um tamanho menor
+			ind->Lab = (labels*)realloc(ind->Lab, sizeof(labels)*(ind->tamanhoL));
+			ind->tamanhoL--;
+			strcpy(ind->Lab[ind->tamanhoL].chave, FIM_IND);
+			return;
+		}
+	}
+
+	printf("Registro inexistente.\n");
+	getchar();
 }
 
 void limpaIndiceSecundario(indexS* ind){
