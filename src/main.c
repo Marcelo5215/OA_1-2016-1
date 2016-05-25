@@ -3,57 +3,163 @@
 #include <string.h>
 #include "index.h"
 
-int main(int argc, char **argv){
+/*
+MARCELO DE ARAUJO LOPES JUNIOR - 150016794
+RAFAEL DE LIMA CHEHAB - 150045123
 
-	tabelaInd_Prim *CP = criaIndicePrimario((char *) "lista1.txt");
-	indexS *IS = criaIndiceSecundario((char *)"lista1.txt", 0);
+PROGRAMA DE TESTE, CUIDADO DURANTE A UTILIZACAO.
+- CRIE OS INDICES PRIMARIOS E SECUNDARIOS ANTES DE UTILIZAR OUTROS RECURSOS
+- CUIDADO COM A OPCAO FEITA NO INDICE SECUNDARIO, SEMPRE UTILIZE A MESMA, CASO CONTRARIO O INDICE SECUNDARIO PODE NAO FUNCIONAR CORRETAMENTE
+- CERTIFIQUE-SE DE DIGITAR OS CAMPOS CORRETOS QUANDO SOLICITADOS
+*/
 
-	printf("\tlista 1:\n");
-	imprimeIndicePrimario(CP);
-	imprimeIndiceSecundario(IS);
-	
-	printf("\tRetirada\n");
-	retirarRegistro("lista1.txt", CP, IS,
-		"041881 Ana Luisa Costa Miguel                   34  CC       A", 0);
-	retirarRegistro("lista1.txt", CP, IS,
-		"031272 Andreza Pollyana da Silva                32  EC       A", 0);
-	
-	imprimeIndicePrimario(CP);
-	imprimeIndiceSecundario(IS);
-	
-	printf("\tAtualizacao\n");
-	atualizarRegistro("lista1.txt", CP, IS,
-		"043217 Erikita Regina Campos de Almeida         34  CC       A",
-		"043217 Erikita Regina Campos de Almeida         34  EC       A");
-	imprimeIndicePrimario(CP);
-	imprimeIndiceSecundario(IS);
-	
-	printf("\tInclusao\n");
-	incluirRegistro("lista1.txt", CP, IS,
-		"000000 Fernando Costa da Silva                  99  CC       B", 0);
-	incluirRegistro("lista1.txt", CP, IS,
-		"044442 Blabla blabla blabla bla                 99  CC       B", 0);
-	incluirRegistro("lista1.txt", CP , IS,
-		"151234 Bernardo Nandes da Silva                 22  EM       C", 0);
+void menu(){
+	system("clear");
+	printf("*****************************************************\n");
+	printf("*  1 - Cria Indice Primario.         				*\n");
+	printf("*  2 - Imprime Indice Primario.      				*\n");
+	printf("*  3 - Insere Registro.			       				*\n");
+	printf("*  4 - Retira Registro.       						*\n");
+	printf("*  5 - Atualiza Indice Primario.     				*\n");
+	printf("*  6 - Intercala Listas.             				*\n");
+	printf("*  7 - Cria Indice Secundario             			*\n");
+	printf("*  8 - Imprime Indice Secundario           			*\n");
+	printf("*  9 - Imprime Indice Primario em um arquivo 		*\n");
+	printf("*  99 - Sair          	                        	*\n");
+	printf("*****************************************************\n");
+	printf("Opcao:   ");
+}
 
-	printf("\tApos mais elementos:\n");
-	imprimeIndicePrimario(CP);
-	imprimeIndiceSecundario(IS);
-	imprimeIndicePrimarioArq(CP, (char*)"indicelista1.ind");
+char* leRegistro(){
+	int i;
+	static char registro[64];
+	char matric[7], nome[42], turma[2], opcao[3], curso[3];
+	printf("Digite a matricula (6 caracteres): \n");
+	scanf("%[^\n]", matric);
+	getchar();
+	printf("Digite o nome (ate 40 caracteres): \n");
+	scanf("%[^\n]", nome);
+	getchar();
+	printf("Digite a turma (1 caracter): \n");
+	scanf("%[^\n]", turma);
+	getchar();
+	printf("Digite a opcao (2 caracteres): \n");
+	scanf("%[^\n]", opcao);
+	getchar();
+	printf("Digite o curso (2 caracteres): \n");
+	scanf("%[^\n]", curso);
+	getchar();
 
-	intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
+ 	strcat(registro, matric);
+	strcat(registro, " ");
+	strcat(registro, nome);
+	for(i = strlen(nome); i < 41;i++){
+		strcat(registro, " ");
+	}
+	strcat(registro, opcao);	
+	for(i = 2; i < 4;i++){
+		strcat(registro, " ");
+	}
+	strcat(registro, curso);	
+	for(i = 2; i < 9;i++){
+		strcat(registro, " ");
+	}
+	strcat(registro, turma);
+	strcat(registro, "\0");
 
-	limpaIndiceSecundario(IS);
-	free(CP);
+	return registro;
+}
 
 
-	/*
-	printf("\tlista 2:\n");
-	CP = criaIndicePrimario((char*)"lista2.txt");
-	imprimeIndicePrimario(CP);
-	imprimeIndicePrimarioArq(CP, (char*)"indicelista2.ind");
-	free(CP);
-	*/
+int main(int agrc, char** argv){
+
+	tabelaInd_Prim* IP = NULL;
+	int A, op;
+	indexS* IS = NULL;
+	char nomeArq[50], nomeArq2[50];
+
+	do{
+		menu();
+		scanf("%d", &A);
+		getchar();
+
+		switch(A){
+			case 1:
+				printf("Digite o nome do arquivo:\n");
+				scanf("%[^\n]s", nomeArq);
+				getchar();
+				IP = criaIndicePrimario(nomeArq);
+				break;
+
+			case 2:
+				imprimeIndicePrimario(IP);
+				getchar();
+				break;
+
+			case 3:				
+				printf("Opcoes: Curso(0), Turma(1)\n");
+				scanf("%d", &op);
+				getchar();
+				incluirRegistro(nomeArq, IP, IS, leRegistro(), op);
+				getchar();
+				break;
+
+			case 4:
+				printf("Opcoes: Curso(0), Turma(1)\n");
+				scanf("%d", &op);
+				getchar();
+				retirarRegistro(nomeArq, IP, IS, leRegistro(), op);
+				getchar();
+				break;
+
+			case 5:
+				printf("Primeiro registro solitado sera o a ser atualizado, e o segundo oque.\n\n");
+				atualizarRegistro(nomeArq, IP, IS, leRegistro(), leRegistro());
+				break;
+
+			case 6:
+				intercalaListasPrimario((char*)"lista1.txt", (char*)"lista2.txt");
+				printf("Cheque listas12.txt\n");
+				getchar();
+				break;
+
+			case 7:
+				printf("Digite o nome do arquivo:\n");
+				scanf("%[^\n]", nomeArq2);
+				getchar();
+				printf("Opcoes: Curso(0), Turma(1)\n");
+				scanf("%d", &op);
+				getchar();
+				IS = criaIndiceSecundario(nomeArq2, op);
+				break;
+
+			case 8:
+				imprimeIndiceSecundario(IS);
+				getchar();
+				break;
+
+			case 9:				
+				imprimeIndicePrimarioArq(IP, "indiceLista.ind");
+				getchar();
+				break;
+
+			case 99:
+				break;
+
+			default:
+				printf("Opcao inexistente.\n");
+				getchar();
+				break;
+		}
+
+
+	}while(A != 99);
+
+
+	if(IP != NULL)
+		free(IP);
+	if(IS != NULL)
+		limpaIndiceSecundario(IS);
 
 	return 0;
 }
