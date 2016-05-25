@@ -3,7 +3,6 @@
 024312 Leonardo Nunes de Souza                  34  CC       B
 031147 Anderson Silva Bezerra                   34  EC       B
 031200 Andre Luiz Silva Bezerra                 34  CC       B
-031272 Andreza Pollyana da Silva                32  EC       A
 032725 Fellipe Choi                             32  CC       B
 033282 Henrique Elias da Silva                  34  CC       B
 035830 Rogerio Augusto de Castro Neves          37  EC       A
@@ -36,3 +35,4 @@
 046946 Vitor Bruno Jacintho de Almeida          34  EC       A
 046956 Vitor Gouvea Franchi                     34  EC       A
 046961 Vitor Paulo Villarino Pinto              34  CC       B
+151234 Bernardo Nandes da Silva                 22  EM       C

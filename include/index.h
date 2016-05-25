@@ -19,22 +19,18 @@
 	int primeiroElementoIndicePrimario(tabelaInd_Prim *ind);
 	int ultimoElementoIndicePrimario(tabelaInd_Prim *ind);
 
-	tabelaInd_Prim* criaIndicePrimario(char* nomeArq);
-	void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita);
-	void imprimeIndicePrimario(tabelaInd_Prim* ind);
-	char* getRegistroPrimario(FILE* fp, long int byte_offset);
-	void imprimeIndicePrimarioArq(tabelaInd_Prim* ind, char* nomeArq);
-	void intercalaListasPrimario(char* lista1, char* lista2);
-	int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria);
+	tabelaInd_Prim* criaIndicePrimario(char *nomeArq);
+	void imprimeIndicePrimario(tabelaInd_Prim *ind);
+	void imprimeIndicePrimarioArq(tabelaInd_Prim *ind, char *nomeArq);
 
-	tabelaInd_Prim* incluirRegistroPrimario (char *nomeArq, tabelaInd_Prim *ind, char *registro);
-	void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro);
-	void atualizaRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *regi_antigo, char *regi_novo);
+	void intercalaListasPrimario(char *lista1, char *lista2);
+	
+	void incluirRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP);
+	void retirarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP);
+	void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo);
 
-	indexS* criaIndiceSecundario(char* nomeArq, int OP);
-	void incluirRegistroSecundario(tabelaInd_Prim* IP, char* nomeArq, indexS* ind, char *registro, int OP);
-	void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, char *registro, int OP);
-	void imprimeIndiceSecundario(indexS* ind);
-	void limpaIndiceSecundario(indexS* ind);
+	indexS *criaIndiceSecundario(char *nomeArq, int OP);
+	void imprimeIndiceSecundario(indexS *ind);
+	void limpaIndiceSecundario(indexS *ind);
 
 #endif

@@ -28,6 +28,18 @@ struct indexS_P{
 	int tamanhoC, tamanhoL;
 };
 
+/*Protótipos internos ao .h*/
+void ordenaIndicePrimario(tabelaInd_Prim *ind, int esquerda, int direita);
+char *getRegistroPrimario(FILE *fp, long int byte_offset);
+int findRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *chave_primaria);
+int findRegistroPrimarioArq(FILE *fp, tabelaInd_Prim *ind, char *chave_primaria);
+void incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *registro);
+void retirarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *registro);
+void atualizarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *regi_antigo, char *regi_novo);
+void incluirRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP);
+void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP);
+
+
 int primeiroElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : 0; }
 //Há ind->tamanho elementos, de 0 até ind->tamanho -1, incluindo FIM_IND que eh o ind->tamanho - 1
 int ultimoElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -1 : ind->tamanho - 1; }
@@ -37,8 +49,8 @@ int ultimoElementoIndicePrimario(tabelaInd_Prim *ind) { return (ind == NULL) ? -
  * 150016794    Marcelo de Araujo Lopes   00    EC      A           *
  * com uma chave primaria que e a concatenacao dos campos matricula *
  * e nome.                                                          */
-tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
-	FILE* fp;
+tabelaInd_Prim *criaIndicePrimario(char *nomeArq){
+	FILE *fp;
 	fp = fopen(nomeArq, "r+");
 
 	char stringAUX[64];      //servira apenas para ler as linhas do arquivo
@@ -47,7 +59,7 @@ tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
 	int tam_indice = 1;        //tamanho atual do indice
 	int i, j;
 	
-	tabelaInd_Prim* CP = (tabelaInd_Prim*) malloc(sizeof(tabelaInd_Prim));    //tabela de indices de Chaves Primarias
+	tabelaInd_Prim *CP = (tabelaInd_Prim *) malloc(sizeof(tabelaInd_Prim));    //tabela de indices de Chaves Primarias
 	CP->vet_ind = (indexI *) malloc(sizeof(indexI));
 	CP->tamanho = 0;
 	
@@ -96,7 +108,7 @@ tabelaInd_Prim* criaIndicePrimario(char* nomeArq){
 }
 
 //imprime o indice
-void imprimeIndicePrimario(tabelaInd_Prim* ind){
+void imprimeIndicePrimario(tabelaInd_Prim *ind){
 	int i=0;
 
 	while(strcmp(ind->vet_ind[i].key, FIM_IND) != 0){
@@ -110,7 +122,7 @@ void imprimeIndicePrimario(tabelaInd_Prim* ind){
 	printf("%s\n", ind->vet_ind[i].key);
 }
 
-void imprimeIndicePrimarioArq(tabelaInd_Prim* ind, char* nomeArq){
+void imprimeIndicePrimarioArq(tabelaInd_Prim *ind, char *nomeArq){
 	FILE *fp = fopen(nomeArq, "w");
 
 	for(int i = 0 ; i < ultimoElementoIndicePrimario(ind) ; i++){
@@ -125,7 +137,7 @@ void imprimeIndicePrimarioArq(tabelaInd_Prim* ind, char* nomeArq){
 }
 
 //ordena o indice primario com o mecanismmo do quicksort recursivo
-void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita){
+void ordenaIndicePrimario(tabelaInd_Prim *ind, int esquerda, int direita){
 	if(direita >  ind->tamanho){
 		printf("Tamanho inadequado.\n");
 		return;
@@ -158,7 +170,7 @@ void ordenaIndicePrimario(tabelaInd_Prim* ind, int esquerda, int direita){
 	}
 } 
 
-char* getRegistroPrimario(FILE* fp, long int byte_offset){
+char *getRegistroPrimario(FILE *fp, long int byte_offset){
 	static char saida[64];
 	fseek(fp, byte_offset, SEEK_SET);
 	fscanf(fp,"%[^\n]\n", saida);
@@ -167,7 +179,8 @@ char* getRegistroPrimario(FILE* fp, long int byte_offset){
 }
 
 //procura pelo registro com determinada chave, busca binaria
-int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primaria) {
+//retorna posição que ocupa no índice primário
+int findRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *chave_primaria) {
 	FILE *fp = fopen(nomeArq, "r");
 	char string[64];
 	int i, j;
@@ -207,7 +220,9 @@ int findRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *chave_primari
 	return -1;
 }
 
-int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria){
+//procura pelo registro com determinada chave, busca binaria
+//retorna byte que ocupa no arquivo
+int findRegistroPrimarioArq(FILE *fp, tabelaInd_Prim *ind, char *chave_primaria){
 	int i, j;
 	if (fp == NULL) {
 		printf("Arquivo inexistente\n");
@@ -239,15 +254,15 @@ int findRegistroPrimarioArq(FILE* fp, tabelaInd_Prim* ind, char *chave_primaria)
 }
 
 // cria um arquivo com as duas listas intercaladas
-void intercalaListasPrimario(char* lista1, char* lista2){
+void intercalaListasPrimario(char *lista1, char *lista2){
 	//arquivos a serem manipulados
 	FILE *fp1, *fp2, *saida;
 	fp1 = fopen(lista1, "r");
 	fp2 = fopen(lista2, "r");
 	saida = fopen("lista12.txt", "w");
 	//indices das listas
-	tabelaInd_Prim* CP1 = criaIndicePrimario(lista1);
-	tabelaInd_Prim* CP2 = criaIndicePrimario(lista2);
+	tabelaInd_Prim *CP1 = criaIndicePrimario(lista1);
+	tabelaInd_Prim *CP2 = criaIndicePrimario(lista2);
 	
 	//a partir dos indices une as listas
 	int i = 0 , j = 0;
@@ -286,11 +301,11 @@ void intercalaListasPrimario(char* lista1, char* lista2){
 	free(CP2);
 }
 
-tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro) {	
-	FILE * fp = fopen(nomeArq, "r+");
+void incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *registro) {	
+	FILE *fp = fopen(nomeArq, "r+");
 	if(fp == NULL){
 		printf("O arquivo não existe\n");
-		return ind;
+		return;
 	}
 	int i = 0, j = 0;
 	char chave_primaria[31];
@@ -323,7 +338,7 @@ tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char
 		if (strcmp(ind->vet_ind[meio].key, chave_primaria) == 0) {
 			printf("Registro já existente\n");
 			fclose(fp);
-			return ind;
+			return;
 		} else if (strcmp(ind->vet_ind[meio].key, chave_primaria) < 0) {
 			i = meio + 1;
 		} else {
@@ -334,7 +349,7 @@ tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char
 	if(i == j && strcmp(ind->vet_ind[j].key, chave_primaria) == 0) {
 		printf("Registro já existente\n");
 		fclose(fp);
-		return ind;
+		return;
 	}
 	
 	//procura o local no qual se deve adiconar
@@ -385,11 +400,9 @@ tabelaInd_Prim* incluirRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char
 		fprintf(fp, "%s\r\n", registro);
 	}
 	fclose(fp);
-	
-	return ind;
 }
 
-void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
+void retirarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *registro){
 	FILE *fp = fopen(nomeArq, "r+");
 	indexI temp;
 	
@@ -479,7 +492,7 @@ void retiraRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *registro){
 	return;
 }
 
-void atualizaRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *regi_antigo, char *regi_novo) {
+void atualizarRegistroPrimario(char *nomeArq, tabelaInd_Prim *ind, char *regi_antigo, char *regi_novo) {
 	char chave_antiga[31];
 	char chave_nova[31];
 	int i, j;
@@ -531,18 +544,18 @@ void atualizaRegistroPrimario(char *nomeArq, tabelaInd_Prim* ind, char *regi_ant
 	} else {
 		//ao se retirar, insere-se um * no arquivo e no índice,
 		//e move-se ao topo do índice o elemento deletado
-		retiraRegistroPrimario(nomeArq, ind, regi_antigo);
+		retirarRegistroPrimario(nomeArq, ind, regi_antigo);
 		//ao se inserir, caso haja um elemento deletado
 		//remove-se o primeiro que será regi_antigo
 		incluirRegistroPrimario(nomeArq, ind, regi_novo);
 	}
 }
 
-indexS* criaIndiceSecundario(char* nomeArq, int OP){
+indexS *criaIndiceSecundario(char *nomeArq, int OP){
 	FILE *fp = fopen(nomeArq, "r");
-	indexS* IS = (indexS*)malloc(sizeof(indexS));
-	IS->CS = (labels*)malloc(sizeof(labels));
-	IS->Lab = (labels*)malloc(sizeof(labels));
+	indexS *IS = (indexS *)malloc(sizeof(indexS));
+	IS->CS = (labels *)malloc(sizeof(labels));
+	IS->Lab = (labels *)malloc(sizeof(labels));
 
 	char string[64];
 	char chave[31], chaveSe[31];
@@ -636,7 +649,7 @@ indexS* criaIndiceSecundario(char* nomeArq, int OP){
 	return(IS);
 }
 
-void imprimeIndiceSecundario(indexS* ind){
+void imprimeIndiceSecundario(indexS *ind){
 	int i=0;
 	while(i < ind->tamanhoC){
 		printf("%s - %4d\n", ind->CS[i].chave, ind->CS[i].pont);
@@ -650,7 +663,7 @@ void imprimeIndiceSecundario(indexS* ind){
 	}
 }
 
-void incluirRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, char *registro, int OP){
+void incluirRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP){
 
 	char chaveSe[31], chave[31];
 	int i = 0, j, flag = 0;
@@ -680,21 +693,7 @@ void incluirRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 		}
 	}
 	ind->tamanhoL++;
-	ind->Lab = (labels*)realloc(ind->Lab, sizeof(labels)*(ind->tamanhoL+1));
-	incluirRegistroPrimario(nomeArq, IP, registro);
-
-	//verifica se o registro existe i=0;
-	while(i < IP->tamanho && flag == 0){
-		if(strcmp(IP->vet_ind[i].key, chave) == 0){
-			flag = 1;
-		}
-		i++;
-	}
-	if(!flag){
-		printf("Registro inexistente\n");
-		return;
-	}
-	flag = 0;
+	ind->Lab = (labels *)realloc(ind->Lab, sizeof(labels)*(ind->tamanhoL+1));
 
 	//monta a chave secundaria
 	switch(OP){
@@ -742,7 +741,7 @@ void incluirRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 	return;
 }
 
-void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, char *registro, int OP){
+void retirarRegistroSecundario(char *nomeArq, indexS *ind, char *registro, int OP){
 	char chave[31], chaveSe[31];
 	int i = 0, j, k=0;
 
@@ -783,7 +782,6 @@ void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 	//realiza a remocao no local apropriado (i)
 	for(i = 0; i < ind->tamanhoL ; i++){
 		if(strcmp(ind->Lab[i].chave, chave) == 0){
-			retiraRegistroPrimario(nomeArq, IP, registro);
 
 			//muda o ponteiro do elemento anterior e do proximo na sublista do registro retirado
 			j=0;
@@ -814,7 +812,7 @@ void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 				if(ind->Lab[j].pont > i && ind->Lab[j].pont != -1){
 					ind->Lab[j].pont--;
 				}
-				if(ind->CS[j].pont == i){
+				if(ind->CS[j].pont == i) {
 					ind->CS[j].pont = ind->Lab[ind->CS[j].pont].pont;
 				}
 				j++;
@@ -832,10 +830,25 @@ void retirarRegistroSecundario(tabelaInd_Prim* IP, char *nomeArq, indexS* ind, c
 	getchar();
 }
 
-void limpaIndiceSecundario(indexS* ind){
+void limpaIndiceSecundario(indexS *ind){
 	free(ind->CS);
 	free(ind->Lab);
 	free(ind);
+}
+
+void incluirRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP) {
+	incluirRegistroPrimario(nomeArq, IP, registro);
+	incluirRegistroSecundario(nomeArq, IS, registro, OP);
+}
+void retirarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *registro, int OP) {
+	retirarRegistroPrimario(nomeArq, IP, registro);
+	retirarRegistroSecundario(nomeArq, IS, registro, OP);
+	
+}
+void atualizarRegistro(char *nomeArq, tabelaInd_Prim *IP, indexS *IS, char *regi_antigo, char *regi_novo) {
+	atualizarRegistroPrimario(nomeArq, IP, regi_antigo, regi_novo);
+// 	atualizarRegistroSecundario(nomeArq, IS, regi_antigo, regi_novo);
+	
 }
 
 #undef FIM_IND
